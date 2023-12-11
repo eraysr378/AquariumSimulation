@@ -18,7 +18,7 @@ public class Predator : Fish
 
     [SerializeField] private PredatorPreferredDepthSO preferredDepthsSO;
     [SerializeField] private PredatorSpeedSO speedsSO;
-    
+
     [SerializeField] private bool isTargetCellSelectionStarted;
     private float healTimer;
     // Start is called before the first frame update
@@ -51,22 +51,26 @@ public class Predator : Fish
     // Update is called once per frame
     private void Update()
     {
-        if(GetHealthStatus() == HealthStatus.Dead)
+        if (GetHealthStatus() == HealthStatus.Dead)
         {
             spriteRenderer.color = Color.black;
             return;
         }
-        healTimer += Time.deltaTime;
-
-
-        if (healTimer > 5 && GetHealthStatus() == HealthStatus.Sick)
+        if (GetHealthStatus() == HealthStatus.Sick)
         {
-            SetMood(Mood.Calm);
-            SetHealthStatus(HealthStatus.Healthy);
-            healTimer = 0;
+            healTimer += Time.deltaTime;
+            if (healTimer > 10)
+            {
+                SetMood(Mood.Calm);
+                SetHealthStatus(HealthStatus.Healthy);
+                healTimer = 0;
+            }
         }
+
+
+
         hungerPoints -= Time.deltaTime * hungerCoefficient;
-        if(hungerPoints < 0)
+        if (hungerPoints < 0)
         {
             SetHealthStatus(HealthStatus.Dead);
         }
@@ -124,34 +128,34 @@ public class Predator : Fish
     }
     private IEnumerator SelectTargetCell()
     {
-        if (adjacentCells.Count == 0)
+        if (adjacentWaterCellList.Count == 0)
         {
             isTargetCellSelectionStarted = false;
             yield break;
         }
-        Cell candidateTargetCell = adjacentCells[0];
-        adjacentCells.RemoveAt(0);
-        while (adjacentCells.Count > 0)
+        Water candidateTargetCell = adjacentWaterCellList[0];
+        adjacentWaterCellList.RemoveAt(0);
+        while (adjacentWaterCellList.Count > 0)
         {
-            int random = UnityEngine.Random.Range(0, adjacentCells.Count);
+            int random = UnityEngine.Random.Range(0, adjacentWaterCellList.Count);
             if (GetHealthStatus() == HealthStatus.Sick)
             {
-                if (Cell.IsDepthBetween(adjacentCells[random].GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
+                if (Cell.IsDepthBetween(adjacentWaterCellList[random].GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
                 {
-                    candidateTargetCell = adjacentCells[random];
+                    candidateTargetCell = adjacentWaterCellList[random];
                 }
                 else
                 {
-                    if (GetCurrentDepth() > GetPreferredDepthMax() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMax()) > Mathf.Abs(adjacentCells[random].GetDepth() - GetPreferredDepthMax()))
+                    if (GetCurrentDepth() > GetPreferredDepthMax() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMax()) > Mathf.Abs(adjacentWaterCellList[random].GetDepth() - GetPreferredDepthMax()))
                     {
-                        candidateTargetCell = adjacentCells[random];
+                        candidateTargetCell = adjacentWaterCellList[random];
                     }
-                    else if (GetCurrentDepth() < GetPreferredDepthMin() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMin()) > Mathf.Abs(adjacentCells[random].GetDepth() - GetPreferredDepthMin()))
+                    else if (GetCurrentDepth() < GetPreferredDepthMin() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMin()) > Mathf.Abs(adjacentWaterCellList[random].GetDepth() - GetPreferredDepthMin()))
                     {
-                        candidateTargetCell = adjacentCells[random];
+                        candidateTargetCell = adjacentWaterCellList[random];
                     }
                 }
-                adjacentCells.RemoveAt(random);
+                adjacentWaterCellList.RemoveAt(random);
                 yield return null;
             }
             else
@@ -160,59 +164,59 @@ public class Predator : Fish
                 {
                     case Mood.PassivePredation:
                     case Mood.Calm:
-                        if (Cell.IsDepthBetween(adjacentCells[random].GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
+                        if (Cell.IsDepthBetween(adjacentWaterCellList[random].GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
                         {
-                            candidateTargetCell = adjacentCells[random];
+                            candidateTargetCell = adjacentWaterCellList[random];
                         }
                         else
                         {
-                            if (GetCurrentDepth() > GetPreferredDepthMax() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMax()) > Mathf.Abs(adjacentCells[random].GetDepth() - GetPreferredDepthMax()))
+                            if (GetCurrentDepth() > GetPreferredDepthMax() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMax()) > Mathf.Abs(adjacentWaterCellList[random].GetDepth() - GetPreferredDepthMax()))
                             {
-                                candidateTargetCell = adjacentCells[random];
+                                candidateTargetCell = adjacentWaterCellList[random];
                             }
-                            else if (GetCurrentDepth() < GetPreferredDepthMin() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMin()) > Mathf.Abs(adjacentCells[random].GetDepth() - GetPreferredDepthMin()))
+                            else if (GetCurrentDepth() < GetPreferredDepthMin() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMin()) > Mathf.Abs(adjacentWaterCellList[random].GetDepth() - GetPreferredDepthMin()))
                             {
-                                candidateTargetCell = adjacentCells[random];
+                                candidateTargetCell = adjacentWaterCellList[random];
                             }
                         }
 
-                        adjacentCells.RemoveAt(random);
+                        adjacentWaterCellList.RemoveAt(random);
                         yield return null;
                         break;
                     case Mood.ActivePredation:
                         // if there is a prey around, target it
-                        if (targetFish == null && adjacentCells[random].GetPreyList().Count != 0)
+                        if (targetFish == null && adjacentWaterCellList[random].GetPreyList().Count != 0)
                         {
-                            targetFish = adjacentCells[random].GetPreyList().First();
+                            targetFish = adjacentWaterCellList[random].GetPreyList().First();
                         }
                         // if there is a cell where a fish has been on compare the cell with the candidate cell
-                        if (adjacentCells[random].GetPreyExistencePossibility() > 0)
+                        if (adjacentWaterCellList[random].GetPreyExistencePossibility() > 0)
                         {
-                            if (adjacentCells[random].GetPreyExistencePossibility() > candidateTargetCell.GetPreyExistencePossibility())
+                            if (adjacentWaterCellList[random].GetPreyExistencePossibility() > candidateTargetCell.GetPreyExistencePossibility())
                             {
-                                candidateTargetCell = adjacentCells[random];
+                                candidateTargetCell = adjacentWaterCellList[random];
                             }
                         }
                         // if there is no possible fish, then make the predator patrol
                         else if (candidateTargetCell.GetPreyExistencePossibility() <= 0)
                         {
-                            if (Cell.IsDepthBetween(adjacentCells[random].GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
+                            if (Cell.IsDepthBetween(adjacentWaterCellList[random].GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
                             {
-                                candidateTargetCell = adjacentCells[random];
+                                candidateTargetCell = adjacentWaterCellList[random];
                             }
                             else
                             {
-                                if (GetCurrentDepth() > GetPreferredDepthMax() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMax()) > Mathf.Abs(adjacentCells[random].GetDepth() - GetPreferredDepthMax()))
+                                if (GetCurrentDepth() > GetPreferredDepthMax() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMax()) > Mathf.Abs(adjacentWaterCellList[random].GetDepth() - GetPreferredDepthMax()))
                                 {
-                                    candidateTargetCell = adjacentCells[random];
+                                    candidateTargetCell = adjacentWaterCellList[random];
                                 }
-                                else if (GetCurrentDepth() < GetPreferredDepthMin() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMin()) > Mathf.Abs(adjacentCells[random].GetDepth() - GetPreferredDepthMin()))
+                                else if (GetCurrentDepth() < GetPreferredDepthMin() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMin()) > Mathf.Abs(adjacentWaterCellList[random].GetDepth() - GetPreferredDepthMin()))
                                 {
-                                    candidateTargetCell = adjacentCells[random];
+                                    candidateTargetCell = adjacentWaterCellList[random];
                                 }
                             }
                         }
-                        adjacentCells.RemoveAt(random);
+                        adjacentWaterCellList.RemoveAt(random);
                         yield return null;
                         break;
                 }
@@ -229,20 +233,17 @@ public class Predator : Fish
             Vector3 moveDir = (targetFish.transform.position - transform.position).normalized;
             transform.position += moveDir * GetSpeed() * Time.deltaTime;
             float angle = MathF.Atan2(moveDir.y, moveDir.x) * Mathf.Rad2Deg;
-
             if (Mathf.Abs(transform.eulerAngles.z - angle) > Mathf.Abs(transform.eulerAngles.z - (360 + angle)))
             {
                 angle = 360 + angle;
-
             }
             transform.eulerAngles = Vector3.Lerp(transform.eulerAngles, new Vector3(0, 0, angle), Time.deltaTime * rotationSpeed);
-
             return;
         }
         if (GetTargetCell() == null && !isTargetCellSelectionStarted)
         {
             isTargetCellSelectionStarted = true;
-            GetAdjacentCells();
+            GetAdjacentWaterCells();
             StartCoroutine(SelectTargetCell());
         }
         if (GetTargetCell() != null && (Mathf.Abs(transform.position.x - GetTargetCell().GetPosition().x) < 0.1f && Mathf.Abs(transform.position.y - GetTargetCell().GetPosition().y) < 0.1f))
@@ -264,6 +265,15 @@ public class Predator : Fish
             }
             transform.eulerAngles = Vector3.Lerp(transform.eulerAngles, new Vector3(0, 0, angle), Time.deltaTime * rotationSpeed);
         }
+
+    }
+    public Mood GetMood()
+    {
+        return mood;
+    }
+    public float GetHungerPoints()
+    {
+        return hungerPoints;
 
     }
     private void OnTriggerEnter2D(Collider2D collision)

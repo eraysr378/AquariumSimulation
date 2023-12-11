@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe4327a1fdbaf424a8a8bd8a55383f66, type: 3}
   m_Name: Predator Preferred Depth SO
   m_EditorClassIdentifier: 
-  depthCalmMin: 0
-  depthCalmMax: 2
-  depthPassivePredationMax: 0
-  depthPassivePredationMin: 2
-  depthActivePredationMax: 3
-  depthActivePredationMin: 4
+  depthCalmMin: 1
+  depthCalmMax: 3
+  depthPassivePredationMax: 1
+  depthPassivePredationMin: 3
+  depthActivePredationMax: 4
+  depthActivePredationMin: 5

@@ -113,7 +113,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 4.52, y: 3.0745838, z: 0}
-  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
+  m_LocalScale: {x: 0.35, y: 0.35, z: 0.35}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7101470076429043386}
@@ -131,7 +131,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 099b525e807b7cc4c9ca5096b2e36756, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  adjacentCells: []
+  adjacentWaterCellList: []
+  hungerPoints: 0
+  hungerCoefficient: 0
   speed: 3
   currentCell: {fileID: 0}
   targetCell: {fileID: 0}
@@ -139,12 +141,12 @@ MonoBehaviour:
   preferredDepthMin: 0
   preferredDepthMax: 0
   currentDepth: 0
+  poisonPossibilitySO: {fileID: 11400000, guid: ddfbec8808ab0c044986e3241e34c335, type: 2}
+  hungerLevel: 0
+  healthStatus: 0
   mood: 0
   superiority: 0
-  hungerLevel: 0
   targetFish: {fileID: 0}
-  predationSpeed: 0
-  moodChangeTime: 0
   preferredDepthsSO: {fileID: 11400000, guid: fb5abec39715e02448e9c10c70745b7c, type: 2}
   speedsSO: {fileID: 11400000, guid: f82dcf2a53cc8294d8c2943136d053b9, type: 2}
   isTargetCellSelectionStarted: 0

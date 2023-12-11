@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a04a77f1d74bdfa4a91687b608000746, type: 3}
+  m_Name: Cell Colors SO
+  m_EditorClassIdentifier: 
+  defaultColor: {r: 0, g: 0.81960785, b: 1, a: 1}
+  slightlyPoisonedColor: {r: 0, g: 0.81960785, b: 0.8, a: 1}
+  poisonedColor: {r: 0, g: 0.8196079, b: 0.5568628, a: 1}
+  severelyPoisonedColor: {r: 0, g: 0.8196079, b: 0.2627451, a: 1}

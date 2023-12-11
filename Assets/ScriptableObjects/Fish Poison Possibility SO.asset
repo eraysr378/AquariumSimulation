@@ -9,11 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eaf7058a52796cc47ac00279dc294ec8, type: 3}
-  m_Name: Predator Speed SO
+  m_Script: {fileID: 11500000, guid: 890c93b144f5a144cb8f489fa9f9fcb5, type: 3}
+  m_Name: Fish Poison Possibility SO
   m_EditorClassIdentifier: 
-  calmSpeed: 2
-  activePredationSpeed: 4
-  passivePredationSpeed: 2
-  sickSpeed: 1
-  reproductionSpeed: 0
+  slightlyPoisoned: 5
+  poisoned: 15
+  severelyPoisoned: 25

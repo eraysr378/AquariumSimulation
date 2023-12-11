@@ -18,32 +18,45 @@ public enum HealthStatus
 public class Fish : MonoBehaviour
 {
     public event EventHandler OnHealthStatusChanged;
-    [SerializeField] protected List<Cell> adjacentCells;
+    //[SerializeField] protected List<Cell> adjacentCellList;
+    [SerializeField] protected List<Water> adjacentWaterCellList;
     [SerializeField] protected float hungerPoints;
     [SerializeField] protected float hungerCoefficient;
     [SerializeField] private float speed;
-    [SerializeField] private Cell currentCell;
-    [SerializeField] private Cell targetCell;
+    [SerializeField] private Water currentCell;
+    [SerializeField] private Water targetCell;
     [SerializeField] private float age;
     [SerializeField] private float preferredDepthMin;
     [SerializeField] private float preferredDepthMax;
     [SerializeField] private float currentDepth;
+    [SerializeField] private PoisonPossibilitySO poisonPossibilitySO;
     [SerializeField] private HungerLevel hungerLevel;
     [SerializeField] private HealthStatus healthStatus;
 
     protected SpriteRenderer spriteRenderer;
-    protected void GetAdjacentCells()
+    protected void GetAdjacentWaterCells()
     {
         if (currentCell != null)
         {
-            adjacentCells = currentCell.GetAdjacentCellList();          
+            adjacentWaterCellList = currentCell.GetAdjacentWaterCellList();
         }
         else
         {
-            adjacentCells = new List<Cell>();
+            adjacentWaterCellList = new List<Water>();
         }
     }
-    protected Cell GetCurrentCell()
+    //protected void GetAdjacentCells()
+    //{
+    //    if (currentCell != null)
+    //    {
+    //        adjacentCellList = currentCell.GetAdjacentCellList();          
+    //    }
+    //    else
+    //    {
+    //        adjacentCellList = new List<Cell>();
+    //    }
+    //}
+    protected Water GetCurrentCell()
     {
         return currentCell;
     }
@@ -53,28 +66,28 @@ public class Fish : MonoBehaviour
         {
             currentCell.RemoveFish(this);
         }
-        currentCell = cell;
+        currentCell = (Water)cell;
         currentCell.AddFish(this);
         currentDepth = currentCell.GetDepth();
         int random = UnityEngine.Random.Range(0, 101);
         switch (currentCell.GetQuality())
         {
             case Quality.SlightlyPoisoned:
-                if (random < 5)
+                if (random < poisonPossibilitySO.slightlyPoisoned)
                 {
                     SetHealthStatus(HealthStatus.Sick);
                     OnHealthStatusChanged?.Invoke(this, EventArgs.Empty);
                 }
                 break;
             case Quality.Poisoned:
-                if (random < 15)
+                if (random < poisonPossibilitySO.poisoned)
                 {
                     SetHealthStatus(HealthStatus.Sick);
                     OnHealthStatusChanged?.Invoke(this, EventArgs.Empty);
                 }
                 break;
             case Quality.SeverelyPoisoned:
-                if (random < 25)
+                if (random < poisonPossibilitySO.severelyPoisoned)
                 {
                     SetHealthStatus(HealthStatus.Sick);
                     OnHealthStatusChanged?.Invoke(this, EventArgs.Empty);
@@ -87,7 +100,7 @@ public class Fish : MonoBehaviour
         healthStatus = newHealthStatus;
         OnHealthStatusChanged?.Invoke(this, EventArgs.Empty);
     }
-    protected HealthStatus GetHealthStatus()
+    public HealthStatus GetHealthStatus()
     {
         return healthStatus;
     }
@@ -95,7 +108,7 @@ public class Fish : MonoBehaviour
     {
         return targetCell;
     }
-    protected void SetTargetCell(Cell cell)
+    protected void SetTargetCell(Water cell)
     {
         targetCell = cell;
     }

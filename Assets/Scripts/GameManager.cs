@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float currentAlgaeAmount;
     [SerializeField] private Transform hunterPrefab;
     [SerializeField] private Transform preyPrefab;
+    [SerializeField] private Transform crabPrefab;
 
     // Start is called before the first frame update
     float timer = 0;
@@ -20,7 +21,7 @@ public class GameManager : MonoBehaviour
     {
 
 
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < 5; i++)
         {
             Instantiate(preyPrefab, new Vector3(15, 5, 0), Quaternion.identity);
 
@@ -29,6 +30,11 @@ public class GameManager : MonoBehaviour
         {
             Instantiate(hunterPrefab, new Vector3(12, 2, 0), Quaternion.identity);
         }
+        for (int i = 0; i < 1; i++)
+        {
+            Instantiate(crabPrefab, new Vector3(5, 0, 0), Quaternion.identity);
+        }
+
 
     }
 

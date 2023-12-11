@@ -8,7 +8,8 @@ public class GridManager : MonoBehaviour
     public static Dictionary<Vector2, Cell> Grid;
     [SerializeField] private int width, height;
 
-    [SerializeField] private Cell cellPrefab;
+    [SerializeField] private Cell waterPrefab;
+    [SerializeField] private Cell sandPrefab;
     [SerializeField] private Transform cam;
     [SerializeField] private Transform parent;
     private void Awake()
@@ -26,8 +27,14 @@ public class GridManager : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 Cell spawnedCell;
-
-                spawnedCell = Instantiate(cellPrefab, new Vector3(x, y), Quaternion.identity);
+                if( y == 0)
+                {
+                    spawnedCell = Instantiate(sandPrefab, new Vector3(x, y), Quaternion.identity);
+                }
+                else
+                {
+                    spawnedCell = Instantiate(waterPrefab, new Vector3(x, y), Quaternion.identity);
+                }
 
 
                 spawnedCell.name = $"Tile {x} {y}";
