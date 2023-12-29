@@ -50,7 +50,7 @@ MonoBehaviour:
   adjacentWaterCellList: []
   hungerPoints: 0
   hungerCoefficient: 0
-  speed: 2
+  speed: 1
   currentCell: {fileID: 0}
   targetCell: {fileID: 0}
   age: 0
@@ -60,7 +60,11 @@ MonoBehaviour:
   poisonPossibilitySO: {fileID: 11400000, guid: ddfbec8808ab0c044986e3241e34c335, type: 2}
   hungerLevel: 0
   healthStatus: 0
+  maturity: 0
+  scalingAmount: 1.1
   isTargetCellSelectionStarted: 0
+  mood: 0
+  targetLeaf: {fileID: 0}
 --- !u!58 &-3457924800592656876
 CircleCollider2D:
   m_ObjectHideFlags: 0

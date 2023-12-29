@@ -7,8 +7,11 @@ public class PredatorPreferredDepthSO : ScriptableObject
 {
     public float depthCalmMin;
     public float depthCalmMax;
-    public float depthPassivePredationMax;
+
     public float depthPassivePredationMin;
-    public float depthActivePredationMax;
+    public float depthPassivePredationMax;
+
     public float depthActivePredationMin;
+    public float depthActivePredationMax;
+
 }

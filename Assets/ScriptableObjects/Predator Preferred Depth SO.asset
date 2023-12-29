@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   depthCalmMin: 1
   depthCalmMax: 3
-  depthPassivePredationMax: 1
-  depthPassivePredationMin: 3
-  depthActivePredationMax: 4
-  depthActivePredationMin: 5
+  depthPassivePredationMin: 1
+  depthPassivePredationMax: 3
+  depthActivePredationMin: 4
+  depthActivePredationMax: 6

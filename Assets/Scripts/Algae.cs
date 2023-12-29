@@ -20,6 +20,7 @@ public class Algae : MonoBehaviour
     [SerializeField] private float poisonPossibility;
     [SerializeField] private AlgaeGrowthSO algaeGrowthSO;
     [SerializeField] private float poisonSpreadTime;
+    [SerializeField] private List<Prey> hiddenPreyList;
     private SpriteRenderer spriteRenderer;
 
     private float timer;
@@ -63,7 +64,7 @@ public class Algae : MonoBehaviour
                 break;
             case GrowthLevel.Mature:
                 leafSpawnerTimer += Time.deltaTime;
-                if (leafSpawnerTimer > 3)
+                if (leafSpawnerTimer > 10)
                 {
                     leafSpawnerTimer = 0;
                     SpawnLeaf();
@@ -159,6 +160,14 @@ public class Algae : MonoBehaviour
     {
         currentSandCell.RemoveCurrentAlgae();
         GameManager.Instance.DecreaseCurrentAlgaeAmount();
+        foreach (Prey prey in hiddenPreyList)
+        {
+            prey.GetOutOfAlgae(this);
+        }
 
+    }
+    public void AddHiddenPrey(Prey prey)
+    {
+        hiddenPreyList.Add(prey);       
     }
 }

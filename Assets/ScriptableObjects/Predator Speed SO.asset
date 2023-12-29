@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaf7058a52796cc47ac00279dc294ec8, type: 3}
   m_Name: Predator Speed SO
   m_EditorClassIdentifier: 
-  calmSpeed: 2
-  activePredationSpeed: 4
-  passivePredationSpeed: 2
+  calmSpeed: 1.5
+  activePredationSpeed: 2
+  passivePredationSpeed: 1.5
   sickSpeed: 1
   reproductionSpeed: 0

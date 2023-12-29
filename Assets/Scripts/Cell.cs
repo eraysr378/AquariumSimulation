@@ -59,6 +59,38 @@ public class Cell : MonoBehaviour
 
         return adjacentWaterCellList;
     }
+
+    public List<Sand> GetAdjacentSandCellList()
+    {
+        List<Sand> adjacentSandCellList = new List<Sand>();
+
+        Cell right = GridManager.GetCellAtPosition(new Vector2(position.x + 1, position.y));
+        if (right != null && right is Sand)
+            adjacentSandCellList.Add((Sand)right);
+        Cell left = GridManager.GetCellAtPosition(new Vector2(position.x - 1, position.y));
+        if (left != null && left is Sand)
+            adjacentSandCellList.Add((Sand)left);
+        Cell up = GridManager.GetCellAtPosition(new Vector2(position.x, position.y + 1));
+        if (up != null && up is Sand)
+            adjacentSandCellList.Add((Sand)up);
+        Cell down = GridManager.GetCellAtPosition(new Vector2(position.x, position.y - 1));
+        if (down != null && down is Sand)
+            adjacentSandCellList.Add((Sand)down);
+        Cell downRight = GridManager.GetCellAtPosition(new Vector2(position.x + 1, position.y - 1));
+        if (downRight != null && downRight is Sand)
+            adjacentSandCellList.Add((Sand)downRight);
+        Cell downLeft = GridManager.GetCellAtPosition(new Vector2(position.x - 1, position.y - 1));
+        if (downLeft != null && downLeft is Sand)
+            adjacentSandCellList.Add((Sand)downLeft);
+        Cell upRight = GridManager.GetCellAtPosition(new Vector2(position.x + 1, position.y + 1));
+        if (upRight != null && upRight is Sand)
+            adjacentSandCellList.Add((Sand)upRight);
+        Cell upLeft = GridManager.GetCellAtPosition(new Vector2(position.x - 1, position.y + 1));
+        if (upLeft != null && upLeft is Sand)
+            adjacentSandCellList.Add((Sand)upLeft);
+
+        return adjacentSandCellList;
+    }
     public List<Cell> GetAdjacentCellList()
     {
         List<Cell> adjacentCellList = new List<Cell>();
@@ -115,5 +147,24 @@ public class Cell : MonoBehaviour
             return true;
         return false;
     }
+    public bool IsOnLeftOf(Cell cell)
+    {
+        if (this.position.x < cell.position.x) return true;
+        return false;
+    }
+    public bool IsOnRightOf(Cell cell)
+    {
+        if (this.position.x > cell.position.x) return true;
+        return false;
+    }
+    public bool IsEdgeCell()
+    {
+        if(this.position.x == GridManager.Instance.GetWidth() - 1 || this.position.x == 0)
+        {
+            return true;
+        }
+        return false;
+    }
+   
 }
 

@@ -16,6 +16,12 @@ public class Water : Cell
 
     private void Update()
     {
+        float color = 255 - preyExistencePossibility * 10;
+        if(color < 0)
+        {
+            color = 0;
+        }
+        SetColor(new Color32(0, 0, (byte)(color), 255));
         poisonTimer += Time.deltaTime;
 
         if (poisonTimer > 5)
@@ -72,7 +78,11 @@ public class Water : Cell
     }
     public void AddPrey(Prey prey)
     {
-        preyExistencePossibility += 1;
+        foreach (Water water in GetAdjacentWaterCellList())
+        {
+            water.preyExistencePossibility += 1;
+        }
+        preyExistencePossibility += 2;
         preyList.Add(prey);
     }
     public List<Prey> GetPreyList()
@@ -89,6 +99,11 @@ public class Water : Cell
     }
     public void AddPredator(Predator predator)
     {
+       
+        foreach (Water water in GetAdjacentWaterCellList())
+        {
+            water.predatorExistencePossibility += 2;
+        }
         predatorExistencePossibility += 3;
         predatorList.Add(predator);
     }
@@ -179,7 +194,14 @@ public class Water : Cell
     {
         return quality;
     }
-
+    public void PredatorPassedThrough()
+    {
+        preyExistencePossibility = 0;
+    }
+    public void PreyPassedThrough()
+    {
+        leafExistencePossibility = 0;
+    }
 
 
 }

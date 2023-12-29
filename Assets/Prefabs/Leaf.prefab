@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f69e249a152a24db8947ced729d35c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 1
+  speed: 0.3
   currentWaterCell: {fileID: 0}
   targetWaterCell: {fileID: 0}
 --- !u!58 &3001659888023472047

@@ -23,7 +23,8 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < 5; i++)
         {
-            Instantiate(preyPrefab, new Vector3(15, 5, 0), Quaternion.identity);
+            Fish fish = Instantiate(preyPrefab, new Vector3(5+i*3, 5, 0), Quaternion.identity).GetComponent<Fish>();
+            fish.SetHungePoints(Random.Range(30, 70));
 
         }
         for (int i = 0; i < 1; i++)
