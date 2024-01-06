@@ -18,7 +18,7 @@ public class TestChangePredatorBehaviour : MonoBehaviour
     {
         moodChangeButton.onClick.AddListener(() =>
         {
-            predator.SetMood(Mood.ActivePredation);
+            predator.SetMood(PredatorMood.ActivePredation);
         });
  
     }

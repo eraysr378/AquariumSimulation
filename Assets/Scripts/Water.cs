@@ -4,24 +4,87 @@ using UnityEngine;
 
 public class Water : Cell
 {
+    public enum TestCellColor
+    {
+        PreyExistence,
+        PredatorExistence,
+        LeafExistence,
+        DeadFishExistence,
+        Poisonous
+    }
+    public static TestCellColor CellColor;
     [SerializeField] private CellColorsSO cellColorsSO;
     [SerializeField] private Quality quality;
     [SerializeField] private List<Prey> preyList = new List<Prey>();
     [SerializeField] private List<Predator> predatorList = new List<Predator>();
     [SerializeField] private List<Leaf> leafList = new List<Leaf>();
+    [SerializeField] private List<Fish> deadFishList = new List<Fish>();
     [SerializeField] private float preyExistencePossibility;
     [SerializeField] private float predatorExistencePossibility;
     [SerializeField] private float leafExistencePossibility;
+    [SerializeField] private float deadFishExistencePossibility;
     private float poisonTimer;
-
+    private void TestShowCellColor()
+    {
+        float color;
+        switch (CellColor)
+        {
+            case TestCellColor.PreyExistence:
+                color = 255 - preyExistencePossibility * 10;
+                if (color < 0)
+                {
+                    color = 0;
+                }
+                SetColor(new Color32(0, (byte)(color), 255, 255));
+                break;
+            case TestCellColor.PredatorExistence:
+                color = 255 - predatorExistencePossibility * 10;
+                if (color < 0)
+                {
+                    color = 0;
+                }
+                SetColor(new Color32(0, (byte)(color), 255, 255));
+                break;
+            case TestCellColor.LeafExistence:
+                color = 255 - leafExistencePossibility * 10;
+                if (color < 0)
+                {
+                    color = 0;
+                }
+                SetColor(new Color32(0, (byte)(color), 255, 255));
+                break;
+            case TestCellColor.Poisonous:
+                switch (quality)
+                {
+                    case Quality.Healthy:
+                        SetColor(cellColorsSO.defaultColor);
+                        break;
+                    case Quality.SlightlyPoisoned:
+                        SetColor(cellColorsSO.slightlyPoisonedColor);
+                        break;
+                    case Quality.Poisoned:
+                        SetColor(cellColorsSO.poisonedColor);
+                        break;
+                    case Quality.SeverelyPoisoned:
+                        SetColor(cellColorsSO.severelyPoisonedColor);
+                        break;
+                }
+                break;
+            case TestCellColor.DeadFishExistence:
+                color = 255 - deadFishExistencePossibility * 10;
+                if (color < 0)
+                {
+                    color = 0;
+                }
+                SetColor(new Color32(0, (byte)(color), 255, 255));
+                break;
+            default:
+                break;
+        }
+    }
     private void Update()
     {
-        float color = 255 - preyExistencePossibility * 10;
-        if(color < 0)
-        {
-            color = 0;
-        }
-        SetColor(new Color32(0, 0, (byte)(color), 255));
+        TestShowCellColor();
         poisonTimer += Time.deltaTime;
 
         if (poisonTimer > 5)
@@ -48,11 +111,22 @@ public class Water : Cell
             if (leafExistencePossibility < 0)
                 leafExistencePossibility = 0;
         }
+        if (deadFishExistencePossibility >= deadFishList.Count)
+        {
+            deadFishExistencePossibility -= Time.deltaTime;
+            if (deadFishExistencePossibility < 0)
+                deadFishExistencePossibility = 0;
+        }
     }
 
     public void RemoveFish(Fish fish)
     {
-        if (fish is Prey)
+        if (fish.GetHealthStatus() == HealthStatus.Dead)
+        {
+            RemoveDeadFish(fish);
+            return;
+        }
+        else if (fish is Prey)
         {
             RemovePrey((Prey)fish);
         }
@@ -63,7 +137,12 @@ public class Water : Cell
     }
     public void AddFish(Fish fish)
     {
-        if (fish is Prey)
+        if (fish.GetHealthStatus() == HealthStatus.Dead)
+        {
+            AddDeadFish(fish);
+            return;
+        }
+        else if (fish is Prey)
         {
             AddPrey((Prey)fish);
         }
@@ -71,6 +150,15 @@ public class Water : Cell
         {
             AddPredator((Predator)fish);
         }
+    }
+    public void RemoveDeadFish(Fish fish)
+    {
+        deadFishList.Remove(fish);
+    }
+    public void AddDeadFish(Fish fish)
+    {
+        deadFishExistencePossibility += 2f;
+        deadFishList.Add(fish);
     }
     public void RemovePrey(Prey prey)
     {
@@ -99,12 +187,23 @@ public class Water : Cell
     }
     public void AddPredator(Predator predator)
     {
-       
-        foreach (Water water in GetAdjacentWaterCellList())
+        if (predator.GetMood() == PredatorMood.ActivePredation || predator.GetMood() == PredatorMood.PassivePredation)
         {
-            water.predatorExistencePossibility += 2;
+            foreach (Water water in GetAdjacentWaterCellList())
+            {
+                water.predatorExistencePossibility += 2;
+                foreach (Prey prey in water.GetPreyList())
+                {
+                    prey.ActivateEscapeMode();
+                }
+            }
+            foreach (Prey prey in GetPreyList())
+            {
+                prey.ActivateEscapeMode();
+            }
+            predatorExistencePossibility += 3;
         }
-        predatorExistencePossibility += 3;
+
         predatorList.Add(predator);
     }
     public List<Predator> GetPredatorList()
@@ -128,9 +227,17 @@ public class Water : Cell
     {
         return leafList;
     }
+    public List<Fish> GetDeadFishList()
+    {
+        return deadFishList;
+    }
     public float GetLeafExistencePossiblity()
     {
         return leafExistencePossibility;
+    }
+    public float GetDeadFishExistencePossibility()
+    {
+        return deadFishExistencePossibility;
     }
     public void IncreasePoisonInvolved()
     {
@@ -142,15 +249,12 @@ public class Water : Cell
         switch (quality)
         {
             case Quality.Healthy:
-                ChangeColor(cellColorsSO.slightlyPoisonedColor);
                 quality = Quality.SlightlyPoisoned;
                 break;
             case Quality.SlightlyPoisoned:
-                ChangeColor(cellColorsSO.poisonedColor);
                 quality = Quality.Poisoned;
                 break;
             case Quality.Poisoned:
-                ChangeColor(cellColorsSO.severelyPoisonedColor);
                 quality = Quality.SeverelyPoisoned;
                 break;
         }
@@ -177,15 +281,12 @@ public class Water : Cell
         switch (quality)
         {
             case Quality.SlightlyPoisoned:
-                ChangeColor(cellColorsSO.defaultColor);
                 quality = Quality.Healthy;
                 break;
             case Quality.Poisoned:
-                ChangeColor(cellColorsSO.slightlyPoisonedColor);
                 quality = Quality.SlightlyPoisoned;
                 break;
             case Quality.SeverelyPoisoned:
-                ChangeColor(cellColorsSO.poisonedColor);
                 quality = Quality.Poisoned;
                 break;
         }
@@ -202,6 +303,30 @@ public class Water : Cell
     {
         leafExistencePossibility = 0;
     }
-
+    public void ScavengerPassedThrough()
+    {
+        leafExistencePossibility = 0;
+        deadFishExistencePossibility = 0;
+    }
+    static public void ShowPreyExistence()
+    {
+        CellColor = TestCellColor.PreyExistence;
+    }
+    static public void ShowPredatorExistence()
+    {
+        CellColor = TestCellColor.PredatorExistence;
+    }
+    static public void ShowLeafExistence()
+    {
+        CellColor = TestCellColor.LeafExistence;
+    }
+    static public void ShowPoisonousness()
+    {
+        CellColor = TestCellColor.Poisonous;
+    }
+    static public void ShowDeadFishExistence()
+    {
+        CellColor = TestCellColor.DeadFishExistence;
+    }
 
 }

@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using UnityEngine;
-public enum Mood
+public enum PredatorMood
 {
     Calm,
     PassivePredation,
@@ -17,7 +17,7 @@ public enum Direction
 
 public class Predator : Fish
 {
-    [SerializeField] private Mood mood;
+    [SerializeField] private PredatorMood predatorMood;
     [SerializeField] private float superiority;
     [SerializeField] private Fish targetFish;
 
@@ -37,7 +37,7 @@ public class Predator : Fish
 
     private void Predator_OnHealthStatusChanged(object sender, EventArgs e)
     {
-        SetMood(Mood.Calm);
+        SetMood(PredatorMood.Calm);
         if (GetHealthStatus() == HealthStatus.Sick)
         {
             spriteRenderer.color = Color.green;
@@ -77,7 +77,7 @@ public class Predator : Fish
             healTimer += Time.deltaTime;
             if (healTimer > 10)
             {
-                SetMood(Mood.Calm);
+                SetMood(PredatorMood.Calm);
                 SetHealthStatus(HealthStatus.Healthy);
                 healTimer = 0;
             }
@@ -89,27 +89,29 @@ public class Predator : Fish
         if (hungerPoints < 0)
         {
             SetHealthStatus(HealthStatus.Dead);
+            GetCurrentCell().RemovePredator(this);
+            return;
         }
         if (GetHealthStatus() == HealthStatus.Healthy)
         {
-            if (mood == Mood.ActivePredation)
+            if (predatorMood == PredatorMood.ActivePredation)
             {
                 if (hungerPoints > 95)
                 {
-                    SetMood(Mood.Calm);
+                    SetMood(PredatorMood.Calm);
                 }
             }
             else if (hungerPoints < 70)
             {
-                SetMood(Mood.ActivePredation);
+                SetMood(PredatorMood.ActivePredation);
             }
             else if (hungerPoints < 75)
             {
-                SetMood(Mood.PassivePredation);
+                SetMood(PredatorMood.PassivePredation);
             }
             else
             {
-                SetMood(Mood.Calm);
+                SetMood(PredatorMood.Calm);
             }
         }
 
@@ -120,55 +122,43 @@ public class Predator : Fish
     private void HandleDeadMovement()
     {
         Cell checkCell = GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y)));
-        SetCurrentCell(checkCell);
-        SetTargetCell((Water)GridManager.GetCellAtPosition(new Vector2(GetCurrentCell().GetPosition().x, GetCurrentCell().GetPosition().y + 1)));
+        if (checkCell != null && checkCell != GetCurrentCell())
+        {
+            SetCurrentCell(checkCell);
+            SetTargetCell((Water)GridManager.GetCellAtPosition(new Vector2(GetCurrentCell().GetPosition().x, GetCurrentCell().GetPosition().y + 1)));
+        }
         if (GetTargetCell() != null)
         {
             Vector3 moveDir = (GetTargetCell().GetPosition() - transform.position).normalized;
-            transform.position += moveDir * speedsSO.sickSpeed * Time.deltaTime;
+            transform.position += moveDir * Time.deltaTime;
         }
-
-        //if (GetTargetCell() == null)
-        //{
-        //    SetTargetCell((Water)GridManager.GetCellAtPosition(new Vector2(GetCurrentCell().GetPosition().x, GetCurrentCell().GetPosition().y + 1)));
-        //}
-        //if (GetTargetCell() != null && (Mathf.Abs(transform.position.x - GetTargetCell().GetPosition().x) < 0.1f && Mathf.Abs(transform.position.y - GetTargetCell().GetPosition().y) < 0.1f))
-        //{
-        //    SetCurrentCell(GetTargetCell());
-        //    SetTargetCell(null);
-        //}
-        //if (GetTargetCell() != null)
-        //{
-        //    Vector3 moveDir = (GetTargetCell().GetPosition() - transform.position).normalized;
-        //    transform.position += moveDir * speedsSO.sickSpeed * Time.deltaTime;
-        //}
     }
-    public void SetMood(Mood newMood)
+    public void SetMood(PredatorMood newMood)
     {
 
-        mood = newMood;
-        switch (mood)
+        predatorMood = newMood;
+        switch (predatorMood)
         {
-            case Mood.Calm:
+            case PredatorMood.Calm:
                 spriteRenderer.color = Color.yellow;
                 targetFish = null;
                 SetPreferredDepthMin(preferredDepthsSO.depthCalmMin);
                 SetPreferredDepthMax(preferredDepthsSO.depthCalmMax);
                 SetSpeed(speedsSO.calmSpeed);
                 break;
-            case Mood.PassivePredation:
+            case PredatorMood.PassivePredation:
                 spriteRenderer.color = Color.gray;
                 SetPreferredDepthMin(preferredDepthsSO.depthPassivePredationMin);
                 SetPreferredDepthMax(preferredDepthsSO.depthPassivePredationMax);
                 SetSpeed(speedsSO.passivePredationSpeed);
                 break;
-            case Mood.ActivePredation:
+            case PredatorMood.ActivePredation:
                 spriteRenderer.color = Color.red;
                 SetPreferredDepthMin(preferredDepthsSO.depthActivePredationMin);
                 SetPreferredDepthMax(preferredDepthsSO.depthActivePredationMax);
                 SetSpeed(speedsSO.activePredationSpeed);
                 break;
-            case Mood.Reproduction:
+            case PredatorMood.Reproduction:
                 break;
 
             default:
@@ -214,10 +204,10 @@ public class Predator : Fish
             }
             else
             {
-                switch (mood)
+                switch (predatorMood)
                 {
-                    case Mood.PassivePredation:
-                    case Mood.Calm:
+                    case PredatorMood.PassivePredation:
+                    case PredatorMood.Calm:
                         if (Cell.IsDepthBetween(adjacentWaterCellList[random].GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
                         {
                             if (moveDirection == Direction.Right && adjacentWaterCellList[random].IsOnRightOf(GetCurrentCell()))
@@ -243,7 +233,7 @@ public class Predator : Fish
 
                         adjacentWaterCellList.RemoveAt(random);
                         break;
-                    case Mood.ActivePredation:
+                    case PredatorMood.ActivePredation:
                         // if there is a prey around, target it
                         if (targetFish == null && adjacentWaterCellList[random].GetPreyList().Count != 0)
                         {
@@ -252,7 +242,6 @@ public class Predator : Fish
                         // if there is a cell where a fish has been on compare the cell with the candidate cell
                         if (adjacentWaterCellList[random].GetPreyExistencePossibility() > candidateTargetCell.GetPreyExistencePossibility())
                         {
-                            Debug.Log("hheyy");
                             candidateTargetCell = adjacentWaterCellList[random];
 
                         }
@@ -296,11 +285,11 @@ public class Predator : Fish
                 }
             }
         }
-        if (mood == Mood.ActivePredation)
+        if (predatorMood == PredatorMood.ActivePredation)
         {
 
             Debug.Log("prey detected: " + candidateTargetCell.GetPreyExistencePossibility());
-            candidateTargetCell.PredatorPassedThrough();
+            GetCurrentCell().PredatorPassedThrough();
         }
         SetTargetCell(candidateTargetCell);
     }
@@ -323,6 +312,8 @@ public class Predator : Fish
             if (checkCurrentCell != null && checkCurrentCell != GetCurrentCell())
             {
                 SetCurrentCell(checkCurrentCell);
+                GetAdjacentWaterCells();
+                SelectTargetCell();
             }
 
             moveDir = (targetFish.transform.position - transform.position).normalized;
@@ -343,12 +334,6 @@ public class Predator : Fish
             GetAdjacentWaterCells();
             SelectTargetCell();
         }
-        //if (checkCell != null && GetTargetCell() != checkCell && GetCurrentCell() != checkCell)
-        //{
-        //    SetCurrentCell(checkCell);
-        //    GetAdjacentWaterCells();
-        //    SelectTargetCell();
-        //}
 
         if (GetTargetCell() != null && GetTargetCell() != GetCurrentCell())
         {
@@ -364,25 +349,10 @@ public class Predator : Fish
 
         }
         transform.eulerAngles = Vector3.Lerp(transform.eulerAngles, new Vector3(0, 0, angle), Time.deltaTime * rotationSpeed);
-
-        //if (GetTargetCell() != null)
-        //{
-        //    Vector3 moveDir = (GetTargetCell().GetPosition() - transform.position).normalized;
-        //    transform.position += moveDir * GetSpeed() * Time.deltaTime;
-
-        //    float angle = MathF.Atan2(moveDir.y, moveDir.x) * Mathf.Rad2Deg;
-        //    if (Mathf.Abs(transform.eulerAngles.z - angle) > Mathf.Abs(transform.eulerAngles.z - (360 + angle)))
-        //    {
-        //        angle = 360 + angle;
-
-        //    }
-        //    transform.eulerAngles = Vector3.Lerp(transform.eulerAngles, new Vector3(0, 0, angle), Time.deltaTime * rotationSpeed);
-        //}
-
     }
-    public Mood GetMood()
+    public PredatorMood GetMood()
     {
-        return mood;
+        return predatorMood;
     }
     public float GetHungerPoints()
     {

@@ -12,13 +12,14 @@ public enum PreyMood
 }
 public class Prey : Fish
 {
-    [SerializeField] private bool isTargetCellSelectionStarted;
     [SerializeField] private PreyMood mood;
     [SerializeField] private Leaf targetLeaf;
-    private Direction moveDirection;
+    [SerializeField] private Direction moveDirection;
 
     private Vector3 targetPos;
     private float escapeTimer;
+    private float escapeSpeed;
+    private float defaultSpeed;
 
     private void Awake()
     {
@@ -33,32 +34,62 @@ public class Prey : Fish
 
         SetPreferredDepthMax(8);
         SetPreferredDepthMin(6);
+        escapeSpeed = 2.5f;
+        defaultSpeed = 1.5f;
     }
     private void Update()
     {
         BaseUpdate();
+        if (GetHealthStatus() == HealthStatus.Dead)
+        {
+            spriteRenderer.color = Color.black;
+
+            HandleDeadMovement();
+            return;
+        }
         hungerPoints -= Time.deltaTime;
+        if (hungerPoints < 0)
+        {
+            SetHealthStatus(HealthStatus.Dead);
+            GetCurrentCell().RemovePrey(this);
+            return;
+        }
         if (escapeTimer > 0)
         {
             escapeTimer -= Time.deltaTime;
             mood = PreyMood.Escape;
+            SetSpeed(escapeSpeed);
         }
         else if (hungerPoints < 50)
         {
             mood = PreyMood.Hungry;
+            SetSpeed(defaultSpeed);
         }
         else
         {
             mood = PreyMood.Calm;
+            SetSpeed(defaultSpeed);
         }
         HandleMovement();
     }
-
+    private void HandleDeadMovement()
+    {
+        Cell checkCell = GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y)));
+        if (checkCell != null && checkCell != GetCurrentCell())
+        {
+            SetCurrentCell(checkCell);
+            SetTargetCell((Water)GridManager.GetCellAtPosition(new Vector2(GetCurrentCell().GetPosition().x, GetCurrentCell().GetPosition().y + 1)));
+        }
+        if (GetTargetCell() != null)
+        {
+            Vector3 moveDir = (GetTargetCell().GetPosition() - transform.position).normalized;
+            transform.position += moveDir * Time.deltaTime;
+        }
+    }
     private void SelectTargetCell()
     {
         if (adjacentWaterCellList.Count == 0)
         {
-            isTargetCellSelectionStarted = false;
             return;
         }
         Color color = Color.white;
@@ -78,8 +109,7 @@ public class Prey : Fish
                 case PreyMood.Calm:
                     if (adjacentWaterCellList[random].GetPredatorExistencePossibility() > 0)
                     {
-                        mood = PreyMood.Escape;
-                        escapeTimer = 5;
+                        ActivateEscapeMode();
                         GetAdjacentWaterCells();
                         continue;
                     }
@@ -130,17 +160,27 @@ public class Prey : Fish
                     }
                     else if (candidateTargetCell.GetLeafExistencePossiblity() <= 0)
                     {
+                        if (Cell.IsDepthBetween(candidateTargetCell.GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
+                        {
+                            if ((moveDirection == Direction.Right && candidateTargetCell.IsOnRightOf(GetCurrentCell())) || (moveDirection == Direction.Left && candidateTargetCell.IsOnLeftOf(GetCurrentCell())))
+                            {
+                                adjacentWaterCellList.RemoveAt(random);
+                                break;
+                            }
+                        }
+                        if (Cell.IsDepthBetween(adjacentWaterCellList[random].GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
+                        {
+                            if (moveDirection == Direction.Right && adjacentWaterCellList[random].IsOnRightOf(GetCurrentCell()))
+                            {
+                                candidateTargetCell = adjacentWaterCellList[random];
+                            }
+                            else if (moveDirection == Direction.Left && adjacentWaterCellList[random].IsOnLeftOf(GetCurrentCell()))
+                            {
+                                candidateTargetCell = adjacentWaterCellList[random];
+                            }
+                        }
 
-                        if (adjacentWaterCellList[random].GetPredatorExistencePossibility() < candidateTargetCell.GetPredatorExistencePossibility())
-                        {
-                            candidateTargetCell = adjacentWaterCellList[random];
-                            Debug.Log("Predator existence possibility: " + adjacentWaterCellList[random].GetPredatorExistencePossibility());
-                        }
-                        else if (Cell.IsDepthBetween(adjacentWaterCellList[random].GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()) && adjacentWaterCellList[random].GetPredatorExistencePossibility() == 0)
-                        {
-                            candidateTargetCell = adjacentWaterCellList[random];
-                        }
-                        else if (adjacentWaterCellList[random].GetPredatorExistencePossibility() == 0)
+                        else if (!Cell.IsDepthBetween(candidateTargetCell.GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
                         {
                             if (GetCurrentDepth() > GetPreferredDepthMax() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMax()) > Mathf.Abs(adjacentWaterCellList[random].GetDepth() - GetPreferredDepthMax()))
                             {
@@ -156,24 +196,20 @@ public class Prey : Fish
                     break;
                 case PreyMood.Escape:
                     color = Color.red;
-                    if (candidateTargetCell.GetDepth() != 1)
+                    if (GetCurrentCell().GetDepth() > 1)
                     {
-                        if (adjacentWaterCellList[random].GetPredatorExistencePossibility() < candidateTargetCell.GetPredatorExistencePossibility())
-                        {
-                            candidateTargetCell = adjacentWaterCellList[random];
-                        }
-                        else if (adjacentWaterCellList[random].GetPredatorExistencePossibility() == candidateTargetCell.GetPredatorExistencePossibility() && adjacentWaterCellList[random].GetDepth() < candidateTargetCell.GetDepth())
+                        if (adjacentWaterCellList[random].GetPredatorList().Count == 0 && adjacentWaterCellList[random].GetDepth() < GetCurrentCell().GetDepth())
                         {
                             candidateTargetCell = adjacentWaterCellList[random];
                         }
                     }
                     else
                     {
-                        if (moveDirection == Direction.Right && adjacentWaterCellList[random].IsOnRightOf(GetCurrentCell()))
+                        if (moveDirection == Direction.Right && adjacentWaterCellList[random].GetDepth() == 1 && adjacentWaterCellList[random].IsOnRightOf(GetCurrentCell()))
                         {
                             candidateTargetCell = adjacentWaterCellList[random];
                         }
-                        else if (moveDirection == Direction.Left && adjacentWaterCellList[random].IsOnLeftOf(GetCurrentCell()))
+                        else if (moveDirection == Direction.Left && adjacentWaterCellList[random].GetDepth() == 1 && adjacentWaterCellList[random].IsOnLeftOf(GetCurrentCell()))
                         {
                             candidateTargetCell = adjacentWaterCellList[random];
                         }
@@ -186,7 +222,7 @@ public class Prey : Fish
         }
         if (mood == PreyMood.Hungry)
         {
-            candidateTargetCell.PreyPassedThrough();
+            GetCurrentCell().PreyPassedThrough();
         }
         SetTargetCell(candidateTargetCell);
         spriteRenderer.color = color;
@@ -199,6 +235,13 @@ public class Prey : Fish
         float angle;
         if (targetLeaf != null)
         {
+            Cell checkCurrentCell = GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y)));
+            if (checkCurrentCell != null && checkCurrentCell != GetCurrentCell())
+            {
+                SetCurrentCell(checkCurrentCell);
+                GetAdjacentWaterCells();
+                SelectTargetCell();
+            }
             moveDir = (targetLeaf.transform.position - transform.position).normalized;
             transform.position += moveDir * GetSpeed() * Time.deltaTime;
             angle = MathF.Atan2(moveDir.y, moveDir.x) * Mathf.Rad2Deg;
@@ -257,7 +300,7 @@ public class Prey : Fish
         SetCurrentCell(GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y))));
         SetTargetCell(GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y))) as Water);
         targetPos = GetCurrentCell().GetPosition();
-        escapeTimer = 0; 
+        escapeTimer = 0;
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -270,7 +313,12 @@ public class Prey : Fish
         }
     }
 
+    public void ActivateEscapeMode()
+    {
+        mood = PreyMood.Escape;
+        escapeTimer = 7;
 
+    }
 
 
 

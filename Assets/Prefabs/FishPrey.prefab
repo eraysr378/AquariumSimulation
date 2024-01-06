@@ -48,6 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   adjacentWaterCellList: []
+  adjacentSandCellList: []
   hungerPoints: 0
   hungerCoefficient: 0
   speed: 1

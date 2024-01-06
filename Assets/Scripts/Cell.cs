@@ -23,11 +23,7 @@ public class Cell : MonoBehaviour
     }
 
 
-    protected void ChangeColor(Color32 color)
-    {
-        spriteRenderer.color = color;
-    }
-
+  
     public List<Water> GetAdjacentWaterCellList()
     {
         List<Water> adjacentWaterCellList = new List<Water>();
