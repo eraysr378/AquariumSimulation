@@ -162,7 +162,8 @@ public class Algae : MonoBehaviour
         GameManager.Instance.DecreaseCurrentAlgaeAmount();
         foreach (Prey prey in hiddenPreyList)
         {
-            prey.GetOutOfAlgae(this);
+            if(prey != null)
+                prey.GetOutOfAlgae(this);
         }
 
     }

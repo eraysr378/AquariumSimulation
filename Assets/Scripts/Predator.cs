@@ -25,7 +25,6 @@ public class Predator : Fish
     [SerializeField] private PredatorSpeedSO speedsSO;
 
     [SerializeField] private bool isTargetCellSelectionStarted;
-    [SerializeField] private Direction moveDirection;
     private float healTimer;
     private Vector3 targetPos;
     // Start is called before the first frame update
@@ -99,6 +98,12 @@ public class Predator : Fish
                 if (hungerPoints > 95)
                 {
                     SetMood(PredatorMood.Calm);
+                    targetFish = null;
+                }
+                else
+                {
+                    float hungerRelatedSpeed = speedsSO.activePredationSpeed + 1 - hungerPoints / 100;
+                    SetSpeed(hungerRelatedSpeed);
                 }
             }
             else if (hungerPoints < 70)
@@ -141,7 +146,6 @@ public class Predator : Fish
         {
             case PredatorMood.Calm:
                 spriteRenderer.color = Color.yellow;
-                targetFish = null;
                 SetPreferredDepthMin(preferredDepthsSO.depthCalmMin);
                 SetPreferredDepthMax(preferredDepthsSO.depthCalmMax);
                 SetSpeed(speedsSO.calmSpeed);
@@ -156,7 +160,8 @@ public class Predator : Fish
                 spriteRenderer.color = Color.red;
                 SetPreferredDepthMin(preferredDepthsSO.depthActivePredationMin);
                 SetPreferredDepthMax(preferredDepthsSO.depthActivePredationMax);
-                SetSpeed(speedsSO.activePredationSpeed);
+                float hungerRelatedSpeed = speedsSO.activePredationSpeed + 1 - hungerPoints / 100;
+                SetSpeed(hungerRelatedSpeed);
                 break;
             case PredatorMood.Reproduction:
                 break;
@@ -176,6 +181,10 @@ public class Predator : Fish
         if (GetCurrentCell().IsEdgeCell() || directionChangePossibility < 1f)
         {
             moveDirection = moveDirection == Direction.Right ? Direction.Left : Direction.Right;
+        }
+        if ((GetMood() == PredatorMood.ActivePredation || GetMood() == PredatorMood.PassivePredation) && targetFish == null && GetCurrentCell().GetPreyList().Count > 0)
+        {
+            targetFish = GetCurrentCell().GetPreyList().First();
         }
         Water candidateTargetCell = adjacentWaterCellList[0];
         adjacentWaterCellList.RemoveAt(0);
@@ -243,14 +252,13 @@ public class Predator : Fish
                         if (adjacentWaterCellList[random].GetPreyExistencePossibility() > candidateTargetCell.GetPreyExistencePossibility())
                         {
                             candidateTargetCell = adjacentWaterCellList[random];
-
                         }
                         // if there is no possible fish, then make the predator patrol
                         else if (candidateTargetCell.GetPreyExistencePossibility() <= 0)
                         {
-                            if(Cell.IsDepthBetween(candidateTargetCell.GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
+                            if (Cell.IsDepthBetween(candidateTargetCell.GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
                             {
-                                if ((moveDirection == Direction.Right && candidateTargetCell.IsOnRightOf(GetCurrentCell())) ||( moveDirection == Direction.Left && candidateTargetCell.IsOnLeftOf(GetCurrentCell())))
+                                if ((moveDirection == Direction.Right && candidateTargetCell.IsOnRightOf(GetCurrentCell())) || (moveDirection == Direction.Left && candidateTargetCell.IsOnLeftOf(GetCurrentCell())))
                                 {
                                     adjacentWaterCellList.RemoveAt(random);
                                     break;
@@ -268,7 +276,7 @@ public class Predator : Fish
                                 }
                             }
 
-                            else if(!Cell.IsDepthBetween(candidateTargetCell.GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
+                            else if (!Cell.IsDepthBetween(candidateTargetCell.GetDepth(), GetPreferredDepthMin(), GetPreferredDepthMax()))
                             {
                                 if (GetCurrentDepth() > GetPreferredDepthMax() && Mathf.Abs(candidateTargetCell.GetDepth() - GetPreferredDepthMax()) > Mathf.Abs(adjacentWaterCellList[random].GetDepth() - GetPreferredDepthMax()))
                                 {
@@ -287,8 +295,6 @@ public class Predator : Fish
         }
         if (predatorMood == PredatorMood.ActivePredation)
         {
-
-            Debug.Log("prey detected: " + candidateTargetCell.GetPreyExistencePossibility());
             GetCurrentCell().PredatorPassedThrough();
         }
         SetTargetCell(candidateTargetCell);
@@ -364,14 +370,21 @@ public class Predator : Fish
         Fish prey = collision.gameObject.GetComponent<Fish>();
         if (prey != null && prey == targetFish)
         {
-            Debug.Log("predator trigger enter");
-
             Destroy(prey.gameObject);
             targetFish = null;
-            hungerPoints += 5;
+            hungerPoints += 25;
         }
     }
-
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        Fish prey = collision.gameObject.GetComponent<Fish>();
+        if (prey != null && prey == targetFish)
+        {
+            Destroy(prey.gameObject);
+            targetFish = null;
+            hungerPoints += 25;
+        }
+    }
 
     private void OnDrawGizmos()
     {

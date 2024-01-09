@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -15,7 +16,6 @@ public class Scavenger : Fish
     [SerializeField] private Fish targetDeadFish;
     [SerializeField] private Leaf targetLeaf;
     [SerializeField] private ScavengerMood scavengerMood;
-    [SerializeField] Direction moveDirection;
     private Vector3 targetPos;
 
     private void Awake()
@@ -131,6 +131,15 @@ public class Scavenger : Fish
         if (GetCurrentCell().IsEdgeCell() || directionChangePossibility < 1f)
         {
             moveDirection = moveDirection == Direction.Right ? Direction.Left : Direction.Right;
+        }
+        // if current cell has a dead fish or leaf then make the fish target it, otherwise the fish passes over them
+        if (targetDeadFish == null && GetCurrentCell().GetDeadFishList().Count > 0)
+        {
+            targetDeadFish = GetCurrentCell().GetDeadFishList().First();
+        }
+        else if (targetLeaf == null && GetCurrentCell().GetLeafList().Count > 0)
+        {
+            targetLeaf = GetCurrentCell().GetLeafList().First();
         }
         Water candidateTargetCell = adjacentWaterCellList[0];
         adjacentWaterCellList.RemoveAt(0);
@@ -248,5 +257,22 @@ public class Scavenger : Fish
             hungerPoints += 5;
         }
 
+    }
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        Fish fish = collision.gameObject.GetComponent<Fish>();
+        if (fish != null && fish.GetHealthStatus() == HealthStatus.Dead)
+        {
+            Destroy(fish.gameObject);
+            targetDeadFish = null;
+            hungerPoints += 30;
+        }
+        Leaf leaf = collision.gameObject.GetComponent<Leaf>();
+        if (leaf != null && leaf == targetLeaf)
+        {
+            Destroy(leaf.gameObject);
+            targetLeaf = null;
+            hungerPoints += 5;
+        }
     }
 }

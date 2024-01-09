@@ -32,6 +32,8 @@ public class Fish : MonoBehaviour
     [SerializeField] protected List<Sand> adjacentSandCellList;
     [SerializeField] protected float hungerPoints;
     [SerializeField] protected float hungerCoefficient;
+    [SerializeField] protected Direction moveDirection;
+
     [SerializeField] private float speed;
     [SerializeField] private Water currentCell;
     [SerializeField] private Water targetCell;
@@ -44,9 +46,10 @@ public class Fish : MonoBehaviour
     [SerializeField] private HealthStatus healthStatus;
     [SerializeField] private Maturity maturity;
     [SerializeField] private float scalingAmount;
-    float babyTimer = 3;
-    float teenTimer = 3;
-    float adultTimer = 3;
+    [SerializeField] private bool canLayEgg;
+    float babyTimer = 5;
+    float teenTimer = 5;
+    float adultTimer = 5;
 
     protected SpriteRenderer spriteRenderer;
     private void Start()
@@ -76,7 +79,9 @@ public class Fish : MonoBehaviour
         {
             age = 0;
             maturity = Maturity.Adult;
+            canLayEgg = true;
             OnMaturityChanged?.Invoke(this, EventArgs.Empty);
+            
         }
         if (maturity == Maturity.Adult && age > adultTimer)
         {
@@ -86,6 +91,14 @@ public class Fish : MonoBehaviour
         }
     
       
+    }
+    public void SetCanLayEgg(bool val)
+    {
+        canLayEgg = val;
+    }
+    public bool CanLayEgg()
+    {
+        return canLayEgg;
     }
     protected void GetAdjacentWaterCells()
     {
@@ -194,7 +207,7 @@ public class Fish : MonoBehaviour
     {
         preferredDepthMax = depth;
     }
-    protected float GetSpeed()
+    public float GetSpeed()
     {
         return speed;
     }
@@ -211,6 +224,14 @@ public class Fish : MonoBehaviour
     public void SetHungePoints(float hungerPoints)
     {
         this.hungerPoints = hungerPoints;
+    }
+    public Maturity GetMaturity()
+    {
+        return maturity;
+    }
+    public void SetMoveDirection(Direction direction)
+    {
+        moveDirection = direction;
     }
 
 }

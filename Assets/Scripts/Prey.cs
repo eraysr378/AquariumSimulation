@@ -8,18 +8,22 @@ public enum PreyMood
 {
     Calm,
     Hungry,
-    Escape
+    Escape,
+    Reproduction
 }
 public class Prey : Fish
 {
     [SerializeField] private PreyMood mood;
     [SerializeField] private Leaf targetLeaf;
-    [SerializeField] private Direction moveDirection;
-
+    [SerializeField] private PreyEgg preyEggPrefab;
     private Vector3 targetPos;
     private float escapeTimer;
     private float escapeSpeed;
     private float defaultSpeed;
+    private bool isLayingEgg;
+    private float neededTimeToLayEgg;
+
+    private float canLayEggTimer;
 
     private void Awake()
     {
@@ -34,8 +38,9 @@ public class Prey : Fish
 
         SetPreferredDepthMax(8);
         SetPreferredDepthMin(6);
-        escapeSpeed = 2.5f;
+        escapeSpeed = 1.9f;
         defaultSpeed = 1.5f;
+        neededTimeToLayEgg = 25f;
     }
     private void Update()
     {
@@ -47,6 +52,15 @@ public class Prey : Fish
             HandleDeadMovement();
             return;
         }
+        if (!CanLayEgg() && GetMaturity() >= Maturity.Adult && mood != PreyMood.Escape)
+        {
+            canLayEggTimer += Time.deltaTime;
+            if (canLayEggTimer > neededTimeToLayEgg)
+            {
+                SetCanLayEgg(true);
+                canLayEggTimer = 0;
+            }
+        }
         hungerPoints -= Time.deltaTime;
         if (hungerPoints < 0)
         {
@@ -57,16 +71,34 @@ public class Prey : Fish
         if (escapeTimer > 0)
         {
             escapeTimer -= Time.deltaTime;
+            spriteRenderer.color = Color.red;
             mood = PreyMood.Escape;
-            SetSpeed(escapeSpeed);
+            float speed = Mathf.Lerp(GetSpeed(), escapeSpeed, Time.deltaTime);
+            SetSpeed(speed);
         }
-        else if (hungerPoints < 50)
+        else if (hungerPoints < 50 && mood != PreyMood.Reproduction)
         {
+            spriteRenderer.color = Color.yellow;
             mood = PreyMood.Hungry;
             SetSpeed(defaultSpeed);
         }
+        else if (CanLayEgg() || isLayingEgg)
+        {
+            spriteRenderer.color = Color.green;
+            mood = PreyMood.Reproduction;
+            SetSpeed(defaultSpeed);
+            if (!isLayingEgg)
+            {
+                if (GetCurrentCell().GetDepth() == 1)
+                {
+                    LayEgg();
+                }
+            }
+
+        }
         else
         {
+            spriteRenderer.color = Color.white;
             mood = PreyMood.Calm;
             SetSpeed(defaultSpeed);
         }
@@ -92,11 +124,14 @@ public class Prey : Fish
         {
             return;
         }
-        Color color = Color.white;
         float directionChangePossibility = UnityEngine.Random.Range(0, 100);
         if (GetCurrentCell().IsEdgeCell() || directionChangePossibility < 1f)
         {
             moveDirection = moveDirection == Direction.Right ? Direction.Left : Direction.Right;
+        }
+        if (targetLeaf == null && GetCurrentCell().GetLeafList().Count > 0)
+        {
+            targetLeaf = GetCurrentCell().GetLeafList().First();
         }
         Water candidateTargetCell = adjacentWaterCellList[0];
         adjacentWaterCellList.RemoveAt(0);
@@ -116,7 +151,6 @@ public class Prey : Fish
                     if (adjacentWaterCellList[random].GetPredatorExistencePossibility() < candidateTargetCell.GetPredatorExistencePossibility())
                     {
                         candidateTargetCell = adjacentWaterCellList[random];
-                        Debug.Log("Predator detected: " + adjacentWaterCellList[random].GetPredatorExistencePossibility());
                     }
                     else if (candidateTargetCell.GetPredatorExistencePossibility() == 0)
                     {
@@ -195,12 +229,25 @@ public class Prey : Fish
                     adjacentWaterCellList.RemoveAt(random);
                     break;
                 case PreyMood.Escape:
-                    color = Color.red;
                     if (GetCurrentCell().GetDepth() > 1)
                     {
                         if (adjacentWaterCellList[random].GetPredatorList().Count == 0 && adjacentWaterCellList[random].GetDepth() < GetCurrentCell().GetDepth())
                         {
-                            candidateTargetCell = adjacentWaterCellList[random];
+                            if (candidateTargetCell.GetPredatorList().Count == 0 && candidateTargetCell.GetDepth() < GetCurrentCell().GetDepth())
+                            {
+                                if (adjacentWaterCellList[random].GetPredatorExistencePossibility() < candidateTargetCell.GetPredatorExistencePossibility())
+                                {
+                                    candidateTargetCell = adjacentWaterCellList[random];
+                                }
+                                else
+                                {
+                                    candidateTargetCell = adjacentWaterCellList[random];
+                                }
+                            }
+                            else
+                            {
+                                candidateTargetCell = adjacentWaterCellList[random];
+                            }
                         }
                     }
                     else
@@ -216,6 +263,38 @@ public class Prey : Fish
                     }
                     adjacentWaterCellList.RemoveAt(random);
                     break;
+                case PreyMood.Reproduction:
+                    if (GetCurrentCell().GetDepth() > 1)
+                    {
+                        if (adjacentWaterCellList[random].GetPredatorList().Count == 0 && adjacentWaterCellList[random].GetDepth() < GetCurrentCell().GetDepth())
+                        {
+                            if (candidateTargetCell.GetPredatorList().Count == 0 && candidateTargetCell.GetDepth() < GetCurrentCell().GetDepth())
+                            {
+                                if (candidateTargetCell.GetPredatorExistencePossibility() > adjacentWaterCellList[random].GetPredatorExistencePossibility())
+                                {
+                                    candidateTargetCell = adjacentWaterCellList[random];
+                                }
+                            }
+                            else
+                            {
+                                candidateTargetCell = adjacentWaterCellList[random];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (moveDirection == Direction.Right && adjacentWaterCellList[random].GetDepth() == 1 && adjacentWaterCellList[random].IsOnRightOf(GetCurrentCell()))
+                        {
+                            candidateTargetCell = adjacentWaterCellList[random];
+                        }
+                        else if (moveDirection == Direction.Left && adjacentWaterCellList[random].GetDepth() == 1 && adjacentWaterCellList[random].IsOnLeftOf(GetCurrentCell()))
+                        {
+                            candidateTargetCell = adjacentWaterCellList[random];
+                        }
+                    }
+                    adjacentWaterCellList.RemoveAt(random);
+
+                    break;
                 default:
                     break;
             }
@@ -225,11 +304,28 @@ public class Prey : Fish
             GetCurrentCell().PreyPassedThrough();
         }
         SetTargetCell(candidateTargetCell);
-        spriteRenderer.color = color;
 
+    }
+    private void LayEgg()
+    {
+        neededTimeToLayEgg += 20; // on each lay, increase the needed time to lay another egg to balance the population growth
+        SetCanLayEgg(false);
+        isLayingEgg = true;
+        Invoke("SpawnEgg", 2f);
+    }
+    private void SpawnEgg()
+    {
+        Vector3 spawnPos = new Vector3(transform.position.x, transform.position.y - 0.05f, 0);
+        PreyEgg egg = Instantiate(preyEggPrefab, spawnPos, Quaternion.identity);
+        egg.SetCurrentCell(GetCurrentCell());
+        isLayingEgg = false;
     }
     private void HandleMovement()
     {
+        if (isLayingEgg)
+        {
+            return;
+        }
         float rotationSpeed = 10f;
         Vector3 moveDir;
         float angle;
@@ -309,16 +405,34 @@ public class Prey : Fish
         {
             Destroy(leaf.gameObject);
             targetLeaf = null;
-            hungerPoints += 5;
+            hungerPoints += 25;
+        }
+    }
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        Leaf leaf = collision.gameObject.GetComponent<Leaf>();
+        if (leaf != null && leaf == targetLeaf)
+        {
+            Destroy(leaf.gameObject);
+            targetLeaf = null;
+            hungerPoints += 25;
         }
     }
 
     public void ActivateEscapeMode()
     {
+        // extra speed increase will be applied only when it is first encounter with the predator
+        if (mood != PreyMood.Escape)
+        {
+            SetSpeed(escapeSpeed + 2f);
+        }
         mood = PreyMood.Escape;
+        GetAdjacentWaterCells();
+        SelectTargetCell();
         escapeTimer = 7;
-
     }
+
+
 
 
 

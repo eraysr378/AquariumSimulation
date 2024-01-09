@@ -23,65 +23,8 @@ public class Water : Cell
     [SerializeField] private float predatorExistencePossibility;
     [SerializeField] private float leafExistencePossibility;
     [SerializeField] private float deadFishExistencePossibility;
-    private float poisonTimer;
-    private void TestShowCellColor()
-    {
-        float color;
-        switch (CellColor)
-        {
-            case TestCellColor.PreyExistence:
-                color = 255 - preyExistencePossibility * 10;
-                if (color < 0)
-                {
-                    color = 0;
-                }
-                SetColor(new Color32(0, (byte)(color), 255, 255));
-                break;
-            case TestCellColor.PredatorExistence:
-                color = 255 - predatorExistencePossibility * 10;
-                if (color < 0)
-                {
-                    color = 0;
-                }
-                SetColor(new Color32(0, (byte)(color), 255, 255));
-                break;
-            case TestCellColor.LeafExistence:
-                color = 255 - leafExistencePossibility * 10;
-                if (color < 0)
-                {
-                    color = 0;
-                }
-                SetColor(new Color32(0, (byte)(color), 255, 255));
-                break;
-            case TestCellColor.Poisonous:
-                switch (quality)
-                {
-                    case Quality.Healthy:
-                        SetColor(cellColorsSO.defaultColor);
-                        break;
-                    case Quality.SlightlyPoisoned:
-                        SetColor(cellColorsSO.slightlyPoisonedColor);
-                        break;
-                    case Quality.Poisoned:
-                        SetColor(cellColorsSO.poisonedColor);
-                        break;
-                    case Quality.SeverelyPoisoned:
-                        SetColor(cellColorsSO.severelyPoisonedColor);
-                        break;
-                }
-                break;
-            case TestCellColor.DeadFishExistence:
-                color = 255 - deadFishExistencePossibility * 10;
-                if (color < 0)
-                {
-                    color = 0;
-                }
-                SetColor(new Color32(0, (byte)(color), 255, 255));
-                break;
-            default:
-                break;
-        }
-    }
+    [SerializeField] private float poisonTimer;
+
     private void Update()
     {
         TestShowCellColor();
@@ -170,7 +113,7 @@ public class Water : Cell
         {
             water.preyExistencePossibility += 1;
         }
-        preyExistencePossibility += 2;
+        preyExistencePossibility += 1.75f;
         preyList.Add(prey);
     }
     public List<Prey> GetPreyList()
@@ -191,7 +134,7 @@ public class Water : Cell
         {
             foreach (Water water in GetAdjacentWaterCellList())
             {
-                water.predatorExistencePossibility += 2;
+                water.predatorExistencePossibility += 1;
                 foreach (Prey prey in water.GetPreyList())
                 {
                     prey.ActivateEscapeMode();
@@ -201,7 +144,7 @@ public class Water : Cell
             {
                 prey.ActivateEscapeMode();
             }
-            predatorExistencePossibility += 3;
+            predatorExistencePossibility += 1.75f;
         }
 
         predatorList.Add(predator);
@@ -266,6 +209,7 @@ public class Water : Cell
         List<Water> poisonedWaterCellList = new List<Water>();
         foreach (Water cell in adjacentWaterCellList)
         {
+
             if ((int)cell.GetQuality() < (int)GetQuality())
             {
                 poisonedWaterCellList.Add(cell);
@@ -275,6 +219,14 @@ public class Water : Cell
         {
             cell.IncreasePoisonInvolved();
         }
+    }
+    public void SetQuality(Quality quality)
+    {
+        this.quality = quality;
+    }
+    public void ResetPoisonTimer()
+    {
+        poisonTimer = 0;
     }
     public void DecreasePoisonInvolved()
     {
@@ -329,4 +281,62 @@ public class Water : Cell
         CellColor = TestCellColor.DeadFishExistence;
     }
 
+    private void TestShowCellColor()
+    {
+        float color;
+        switch (CellColor)
+        {
+            case TestCellColor.PreyExistence:
+                color = 255 - preyExistencePossibility * 10;
+                if (color < 0)
+                {
+                    color = 0;
+                }
+                SetColor(new Color32(0, (byte)(color), 255, 255));
+                break;
+            case TestCellColor.PredatorExistence:
+                color = 255 - predatorExistencePossibility * 10;
+                if (color < 0)
+                {
+                    color = 0;
+                }
+                SetColor(new Color32(0, (byte)(color), 255, 255));
+                break;
+            case TestCellColor.LeafExistence:
+                color = 255 - leafExistencePossibility * 10;
+                if (color < 0)
+                {
+                    color = 0;
+                }
+                SetColor(new Color32(0, (byte)(color), 255, 255));
+                break;
+            case TestCellColor.Poisonous:
+                switch (quality)
+                {
+                    case Quality.Healthy:
+                        SetColor(cellColorsSO.defaultColor);
+                        break;
+                    case Quality.SlightlyPoisoned:
+                        SetColor(cellColorsSO.slightlyPoisonedColor);
+                        break;
+                    case Quality.Poisoned:
+                        SetColor(cellColorsSO.poisonedColor);
+                        break;
+                    case Quality.SeverelyPoisoned:
+                        SetColor(cellColorsSO.severelyPoisonedColor);
+                        break;
+                }
+                break;
+            case TestCellColor.DeadFishExistence:
+                color = 255 - deadFishExistencePossibility * 10;
+                if (color < 0)
+                {
+                    color = 0;
+                }
+                SetColor(new Color32(0, (byte)(color), 255, 255));
+                break;
+            default:
+                break;
+        }
+    }
 }

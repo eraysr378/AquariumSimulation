@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -25,13 +26,15 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < 5; i++)
         {
-            Fish fish = Instantiate(preyPrefab, new Vector3(5+i*3, 5, 0), Quaternion.identity).GetComponent<Fish>();
-            fish.SetHungePoints(Random.Range(30, 70));
+            Prey prey = Instantiate(preyPrefab, new Vector3(5+i*3, 5, 0), Quaternion.identity).GetComponent<Prey>();
+            prey.SetHungePoints(Random.Range(40, 60));
+            prey.SetMoveDirection((Direction)Random.Range(0, 2));
 
         }
         for (int i = 0; i < 1; i++)
         {
-            Instantiate(hunterPrefab, new Vector3(12, 2, 0), Quaternion.identity);
+            Predator predator = Instantiate(hunterPrefab, new Vector3(12, 2, 0), Quaternion.identity).GetComponent<Predator>();
+            predator.SetMoveDirection((Direction)Random.Range(0, 2));
         }
         for (int i = 0; i < 1; i++)
         {
@@ -39,7 +42,8 @@ public class GameManager : MonoBehaviour
         }
         for (int i = 0; i < 1; i++)
         {
-            Instantiate(scavengerPrefab, new Vector3(5, 10, 0), Quaternion.identity);
+            Scavenger scavenger = Instantiate(scavengerPrefab, new Vector3(5, 10, 0), Quaternion.identity).GetComponent<Scavenger>();
+            scavenger.SetMoveDirection((Direction)Random.Range(0, 2));
         }
 
 
@@ -58,6 +62,10 @@ public class GameManager : MonoBehaviour
             {
                 Time.timeScale = 1;
             }
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene(0);
         }
         //timer += Time.deltaTime;
         //if (timer >= 0.1f)
