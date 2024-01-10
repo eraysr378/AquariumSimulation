@@ -13,17 +13,30 @@ public enum PreyMood
 }
 public class Prey : Fish
 {
+    public event EventHandler OnMaturityChanged;
     [SerializeField] private PreyMood mood;
     [SerializeField] private Leaf targetLeaf;
     [SerializeField] private PreyEgg preyEggPrefab;
+    [SerializeField] private FloatingBar floatingBar;
+    [SerializeField] private Maturity maturity;
+    [SerializeField] private float scalingAmount;
+    [SerializeField] private bool canLayEgg;
+    private float babyTimer = 10;
+    private float teenTimer = 10;
+    private float adultTimer = 30;
+    private float ageTimer;
     private Vector3 targetPos;
     private float escapeTimer;
     private float escapeSpeed;
     private float defaultSpeed;
     private bool isLayingEgg;
     private float neededTimeToLayEgg;
-
+    private float hungerLimit;
+    private float neededTimeToLayEggIncraseAmount;
     private float canLayEggTimer;
+    private float eggLayingDuration;
+    private float leafFeedPoint;
+    private float escapeTime;
 
     private void Awake()
     {
@@ -31,20 +44,48 @@ public class Prey : Fish
     }
     private void Start()
     {
-        BaseStart();
+        OnMaturityChanged += Prey_OnMaturityChanged;
         SetCurrentCell(GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y))));
         SetTargetCell(GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y))) as Water);
         targetPos = GetCurrentCell().GetPosition();
 
         SetPreferredDepthMax(8);
         SetPreferredDepthMin(6);
-        escapeSpeed = 1.9f;
-        defaultSpeed = 1.5f;
-        neededTimeToLayEgg = 25f;
+        escapeSpeed = PreyParameters.EscapingSpeed;
+        defaultSpeed =PreyParameters.DefaultSpeed;
+        neededTimeToLayEgg = PreyParameters.NeededTimeToLayEgg;
+        neededTimeToLayEggIncraseAmount = PreyParameters.NeededTimeToLayEggIncreaseAmount;
+        hungerLimit = PreyParameters.HungerLimit;
+        eggLayingDuration = PreyParameters.EggLayingDuration;
+        leafFeedPoint = PreyParameters.LeafFeedPoint;
+        escapeTime = PreyParameters.EscapeTime;
     }
+
+    private void Prey_OnMaturityChanged(object sender, EventArgs e)
+    {
+        transform.localScale *= scalingAmount;
+
+        switch (GetMaturity())
+        {
+            case Maturity.Teen:
+                escapeSpeed *= 0.9f;
+                defaultSpeed *= 0.9f;
+                break;
+            case Maturity.Adult:
+                escapeSpeed *= 0.9f;
+                defaultSpeed *= 0.9f;
+                break;
+            case Maturity.Elderly:
+                escapeSpeed *= 0.9f;
+                defaultSpeed *= 0.9f;
+                break;
+            default:
+                break;
+        }
+    }
+
     private void Update()
     {
-        BaseUpdate();
         if (GetHealthStatus() == HealthStatus.Dead)
         {
             spriteRenderer.color = Color.black;
@@ -76,7 +117,7 @@ public class Prey : Fish
             float speed = Mathf.Lerp(GetSpeed(), escapeSpeed, Time.deltaTime);
             SetSpeed(speed);
         }
-        else if (hungerPoints < 50 && mood != PreyMood.Reproduction)
+        else if (hungerPoints < hungerLimit && mood != PreyMood.Reproduction)
         {
             spriteRenderer.color = Color.yellow;
             mood = PreyMood.Hungry;
@@ -102,7 +143,31 @@ public class Prey : Fish
             mood = PreyMood.Calm;
             SetSpeed(defaultSpeed);
         }
+        CheckMaturity();
         HandleMovement();
+    }
+    private void CheckMaturity()
+    {
+        ageTimer += Time.deltaTime;
+        if (maturity == Maturity.Baby && ageTimer > babyTimer)
+        {
+            ageTimer = 0;
+            maturity = Maturity.Teen;
+            OnMaturityChanged?.Invoke(this, EventArgs.Empty);
+        }
+        if (maturity == Maturity.Teen && ageTimer > teenTimer)
+        {
+            ageTimer = 0;
+            maturity = Maturity.Adult;
+            canLayEgg = true;
+            OnMaturityChanged?.Invoke(this, EventArgs.Empty);
+        }
+        if (maturity == Maturity.Adult && ageTimer > adultTimer)
+        {
+            ageTimer = 0;
+            maturity = Maturity.Elderly;
+            OnMaturityChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
     private void HandleDeadMovement()
     {
@@ -308,10 +373,11 @@ public class Prey : Fish
     }
     private void LayEgg()
     {
-        neededTimeToLayEgg += 20; // on each lay, increase the needed time to lay another egg to balance the population growth
+        neededTimeToLayEgg += neededTimeToLayEggIncraseAmount; // on each lay, increase the needed time to lay another egg to balance the population growth
         SetCanLayEgg(false);
         isLayingEgg = true;
-        Invoke("SpawnEgg", 2f);
+        Invoke("SpawnEgg", eggLayingDuration);
+        floatingBar.FillBar(eggLayingDuration);
     }
     private void SpawnEgg()
     {
@@ -405,7 +471,7 @@ public class Prey : Fish
         {
             Destroy(leaf.gameObject);
             targetLeaf = null;
-            hungerPoints += 25;
+            hungerPoints += leafFeedPoint;
         }
     }
     private void OnTriggerStay2D(Collider2D collision)
@@ -415,7 +481,7 @@ public class Prey : Fish
         {
             Destroy(leaf.gameObject);
             targetLeaf = null;
-            hungerPoints += 25;
+            hungerPoints += leafFeedPoint;
         }
     }
 
@@ -429,11 +495,24 @@ public class Prey : Fish
         mood = PreyMood.Escape;
         GetAdjacentWaterCells();
         SelectTargetCell();
-        escapeTimer = 7;
+        escapeTimer = escapeTime;
     }
-
-
-
+    public float GetDefaultSpeed()
+    {
+        return defaultSpeed;
+    }
+    public void SetCanLayEgg(bool val)
+    {
+        canLayEgg = val;
+    }
+    public bool CanLayEgg()
+    {
+        return canLayEgg;
+    }
+    public Maturity GetMaturity()
+    {
+        return maturity;
+    }
 
 
 }

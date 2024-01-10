@@ -17,23 +17,41 @@ public class Algae : MonoBehaviour
     [SerializeField] private float growthRate;
     [SerializeField] private GrowthLevel growthLevel;
     [SerializeField] private Sand currentSandCell;
-    [SerializeField] private float poisonPossibility;
     [SerializeField] private AlgaeGrowthSO algaeGrowthSO;
-    [SerializeField] private float poisonSpreadTime;
     [SerializeField] private List<Prey> hiddenPreyList;
     private SpriteRenderer spriteRenderer;
 
-    private float timer;
-    private float poisonTimer;
+
+    private float seedToYoungTime;
+    private float youngToMatureTime;
+    private float matureToRottenTime;
+    private float rottenToPoisonousTime;
+    private float poisonousToDeadTime;
+    private float poisonPossibility;
+    private float poisonSpreadTime;
+    private float leafSpawnTime;
+
     private float leafSpawnerTimer;
+    private float poisonTimer;
+    private float timer;
+
+
     // Start is called before the first frame update
     void Start()
     {
         currentSandCell = (Sand)GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y)));
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         growthRate = 0.6f;
-        poisonPossibility = 25f;
-        poisonSpreadTime = 1;
+
+
+        poisonPossibility = AlgaeParameters.PoisonPossibility;
+        poisonSpreadTime = AlgaeParameters.PoisonSpreadTime;
+        seedToYoungTime = AlgaeParameters.SeedToYoungTime;
+        youngToMatureTime = AlgaeParameters.YoungToMatureTime;
+        matureToRottenTime = AlgaeParameters.MatureToRottenTime;
+        rottenToPoisonousTime = AlgaeParameters.RottenToPoisonousTime;
+        poisonousToDeadTime = AlgaeParameters.PoisonousToDeadTime;
+        leafSpawnTime = AlgaeParameters.LeafSpawnTime;
     }
 
     // Update is called once per frame
@@ -43,7 +61,7 @@ public class Algae : MonoBehaviour
         switch (growthLevel)
         {
             case GrowthLevel.Seed:
-                if (timer > algaeGrowthSO.seedTime)
+                if (timer > seedToYoungTime)
                 {
                     spriteRenderer.sprite = algaeGrowthSO.youngSprite;
                     growthLevel = GrowthLevel.Young;
@@ -53,7 +71,7 @@ public class Algae : MonoBehaviour
                 }
                 break;
             case GrowthLevel.Young:
-                if (timer > algaeGrowthSO.youngTime)
+                if (timer > youngToMatureTime)
                 {
                     spriteRenderer.sprite = algaeGrowthSO.matureSprite;
                     growthLevel = GrowthLevel.Mature;
@@ -64,12 +82,12 @@ public class Algae : MonoBehaviour
                 break;
             case GrowthLevel.Mature:
                 leafSpawnerTimer += Time.deltaTime;
-                if (leafSpawnerTimer > 10)
+                if (leafSpawnerTimer > leafSpawnTime)
                 {
                     leafSpawnerTimer = 0;
                     SpawnLeaf();
                 }
-                if (timer > algaeGrowthSO.matureTime)
+                if (timer > matureToRottenTime)
                 {
                     growthLevel = GrowthLevel.Rotten;
                     timer = 0;
@@ -78,12 +96,12 @@ public class Algae : MonoBehaviour
                 }
                 break;
             case GrowthLevel.Rotten:
-                if (timer > algaeGrowthSO.rottenTime / 2)
+                if (timer > rottenToPoisonousTime / 2)
                 {
                     spriteRenderer.color = new Color32(255, 234, 0, 255);
 
                 }
-                if (timer > algaeGrowthSO.rottenTime)
+                if (timer > rottenToPoisonousTime)
                 {
                     growthLevel = GrowthLevel.Poisonous;
                     spriteRenderer.color = new Color32(255, 145, 0, 255);
@@ -92,7 +110,7 @@ public class Algae : MonoBehaviour
                 }
                 break;
             case GrowthLevel.Poisonous:
-                if (timer > algaeGrowthSO.poisonousTime)
+                if (timer > poisonousToDeadTime)
                 {
                     Destroy(gameObject);
                 }
@@ -162,13 +180,13 @@ public class Algae : MonoBehaviour
         GameManager.Instance.DecreaseCurrentAlgaeAmount();
         foreach (Prey prey in hiddenPreyList)
         {
-            if(prey != null)
+            if (prey != null)
                 prey.GetOutOfAlgae(this);
         }
 
     }
     public void AddHiddenPrey(Prey prey)
     {
-        hiddenPreyList.Add(prey);       
+        hiddenPreyList.Add(prey);
     }
 }

@@ -26,8 +26,6 @@ public enum Maturity
 public class Fish : MonoBehaviour
 {
     public event EventHandler OnHealthStatusChanged;
-    public event EventHandler OnMaturityChanged;
-    //[SerializeField] protected List<Cell> adjacentCellList;
     [SerializeField] protected List<Water> adjacentWaterCellList;
     [SerializeField] protected List<Sand> adjacentSandCellList;
     [SerializeField] protected float hungerPoints;
@@ -37,69 +35,17 @@ public class Fish : MonoBehaviour
     [SerializeField] private float speed;
     [SerializeField] private Water currentCell;
     [SerializeField] private Water targetCell;
-    [SerializeField] private float age;
     [SerializeField] private float preferredDepthMin;
     [SerializeField] private float preferredDepthMax;
     [SerializeField] private float currentDepth;
     [SerializeField] private PoisonPossibilitySO poisonPossibilitySO;
     [SerializeField] private HungerLevel hungerLevel;
     [SerializeField] private HealthStatus healthStatus;
-    [SerializeField] private Maturity maturity;
-    [SerializeField] private float scalingAmount;
-    [SerializeField] private bool canLayEgg;
-    float babyTimer = 5;
-    float teenTimer = 5;
-    float adultTimer = 5;
 
     protected SpriteRenderer spriteRenderer;
-    private void Start()
-    {
-    }
 
-    protected void Fish_OnMaturityChanged(object sender, EventArgs e)
-    {
-        transform.localScale *= scalingAmount ;
-    }
-    protected void BaseStart()
-    {
-        OnMaturityChanged += Fish_OnMaturityChanged;
 
-    }
-    protected void BaseUpdate()
-    {
-        age += Time.deltaTime;
-        if (maturity == Maturity.Baby && age > babyTimer)
-        {
-            age = 0;
-            maturity = Maturity.Teen;
-            OnMaturityChanged?.Invoke(this, EventArgs.Empty);
-            
-        }
-        if (maturity == Maturity.Teen && age > teenTimer)
-        {
-            age = 0;
-            maturity = Maturity.Adult;
-            canLayEgg = true;
-            OnMaturityChanged?.Invoke(this, EventArgs.Empty);
-            
-        }
-        if (maturity == Maturity.Adult && age > adultTimer)
-        {
-            age = 0;
-            maturity = Maturity.Elderly;
-            OnMaturityChanged?.Invoke(this, EventArgs.Empty);
-        }
-    
-      
-    }
-    public void SetCanLayEgg(bool val)
-    {
-        canLayEgg = val;
-    }
-    public bool CanLayEgg()
-    {
-        return canLayEgg;
-    }
+
     protected void GetAdjacentWaterCells()
     {
         if (currentCell != null)
@@ -225,10 +171,7 @@ public class Fish : MonoBehaviour
     {
         this.hungerPoints = hungerPoints;
     }
-    public Maturity GetMaturity()
-    {
-        return maturity;
-    }
+
     public void SetMoveDirection(Direction direction)
     {
         moveDirection = direction;

@@ -37,7 +37,6 @@ public class Scavenger : Fish
     // Update is called once per frame
     void Update()
     {
-        BaseUpdate();
         hungerPoints -= Time.deltaTime;
         if (hungerPoints < 50)
         {

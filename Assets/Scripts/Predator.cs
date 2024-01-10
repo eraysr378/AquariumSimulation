@@ -17,16 +17,24 @@ public enum Direction
 
 public class Predator : Fish
 {
+    public event EventHandler OnPredatorDied;
     [SerializeField] private PredatorMood predatorMood;
     [SerializeField] private float superiority;
-    [SerializeField] private Fish targetFish;
+    [SerializeField] private Prey targetFish;
 
     [SerializeField] private PredatorPreferredDepthSO preferredDepthsSO;
-    [SerializeField] private PredatorSpeedSO speedsSO;
+    //[SerializeField] private PredatorSpeedSO speedsSO;
 
-    [SerializeField] private bool isTargetCellSelectionStarted;
+    private float calmSpeed;
+    private float predationSpeed;
+    private float sickSpeed;
     private float healTimer;
     private Vector3 targetPos;
+    private float neededTimeToHeal;
+    private float hungerPointsToStopPredation;
+    private float hungerPointsForActivePredation;
+    private float hungerPointsForPassivePredation;
+    private float preyFeedPoint;
     // Start is called before the first frame update
     private void Awake()
     {
@@ -34,27 +42,25 @@ public class Predator : Fish
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
-    private void Predator_OnHealthStatusChanged(object sender, EventArgs e)
-    {
-        SetMood(PredatorMood.Calm);
-        if (GetHealthStatus() == HealthStatus.Sick)
-        {
-            spriteRenderer.color = Color.green;
-            SetPreferredDepthMin(preferredDepthsSO.depthCalmMin);
-            SetPreferredDepthMax(preferredDepthsSO.depthCalmMax);
-            SetSpeed(speedsSO.sickSpeed);
-        }
-    }
 
     private void Start()
     {
-        BaseStart();
         SetCurrentCell(GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y))));
         SetTargetCell(GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y))) as Water);
-
         targetPos = GetCurrentCell().GetPosition();
-        hungerCoefficient = 2;
         hungerPoints = 100;
+
+
+        predationSpeed = PredatorParameters.PredationSpeed;
+        calmSpeed = PredatorParameters.DefaultSpeed;
+        sickSpeed = PredatorParameters.SickSpeed;
+        hungerCoefficient = PredatorParameters.HungerCoefficient;
+        neededTimeToHeal = PredatorParameters.NeededTimeToHeal;
+        hungerPointsToStopPredation = PredatorParameters.HungerPointsToStopPredation;
+        hungerPointsForActivePredation = PredatorParameters.HungerPointsToActivatePredation;
+        hungerPointsForPassivePredation = hungerPointsForActivePredation * 1.1f;
+        preyFeedPoint = PredatorParameters.PreyFeedPoint;
+
     }
 
 
@@ -63,7 +69,6 @@ public class Predator : Fish
     // Update is called once per frame
     private void Update()
     {
-        BaseUpdate();
         if (GetHealthStatus() == HealthStatus.Dead)
         {
             spriteRenderer.color = Color.black;
@@ -74,7 +79,7 @@ public class Predator : Fish
         if (GetHealthStatus() == HealthStatus.Sick)
         {
             healTimer += Time.deltaTime;
-            if (healTimer > 10)
+            if (healTimer > neededTimeToHeal)
             {
                 SetMood(PredatorMood.Calm);
                 SetHealthStatus(HealthStatus.Healthy);
@@ -87,6 +92,7 @@ public class Predator : Fish
         hungerPoints -= Time.deltaTime * hungerCoefficient;
         if (hungerPoints < 0)
         {
+            OnPredatorDied?.Invoke(this, EventArgs.Empty);
             SetHealthStatus(HealthStatus.Dead);
             GetCurrentCell().RemovePredator(this);
             return;
@@ -95,22 +101,22 @@ public class Predator : Fish
         {
             if (predatorMood == PredatorMood.ActivePredation)
             {
-                if (hungerPoints > 95)
+                if (hungerPoints > hungerPointsToStopPredation)
                 {
                     SetMood(PredatorMood.Calm);
                     targetFish = null;
                 }
                 else
                 {
-                    float hungerRelatedSpeed = speedsSO.activePredationSpeed + 1 - hungerPoints / 100;
+                    float hungerRelatedSpeed = predationSpeed + 1 - hungerPoints / 100;
                     SetSpeed(hungerRelatedSpeed);
                 }
             }
-            else if (hungerPoints < 70)
+            else if (hungerPoints < hungerPointsForActivePredation)
             {
                 SetMood(PredatorMood.ActivePredation);
             }
-            else if (hungerPoints < 75)
+            else if (hungerPoints < hungerPointsForPassivePredation)
             {
                 SetMood(PredatorMood.PassivePredation);
             }
@@ -123,7 +129,17 @@ public class Predator : Fish
 
         HandleMovement();
     }
-
+    private void Predator_OnHealthStatusChanged(object sender, EventArgs e)
+    {
+        SetMood(PredatorMood.Calm);
+        if (GetHealthStatus() == HealthStatus.Sick)
+        {
+            spriteRenderer.color = Color.green;
+            SetPreferredDepthMin(preferredDepthsSO.depthCalmMin);
+            SetPreferredDepthMax(preferredDepthsSO.depthCalmMax);
+            SetSpeed(sickSpeed);
+        }
+    }
     private void HandleDeadMovement()
     {
         Cell checkCell = GridManager.GetCellAtPosition(new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y)));
@@ -148,19 +164,19 @@ public class Predator : Fish
                 spriteRenderer.color = Color.yellow;
                 SetPreferredDepthMin(preferredDepthsSO.depthCalmMin);
                 SetPreferredDepthMax(preferredDepthsSO.depthCalmMax);
-                SetSpeed(speedsSO.calmSpeed);
+                SetSpeed(calmSpeed);
                 break;
             case PredatorMood.PassivePredation:
                 spriteRenderer.color = Color.gray;
                 SetPreferredDepthMin(preferredDepthsSO.depthPassivePredationMin);
                 SetPreferredDepthMax(preferredDepthsSO.depthPassivePredationMax);
-                SetSpeed(speedsSO.passivePredationSpeed);
+                SetSpeed(calmSpeed);
                 break;
             case PredatorMood.ActivePredation:
                 spriteRenderer.color = Color.red;
                 SetPreferredDepthMin(preferredDepthsSO.depthActivePredationMin);
                 SetPreferredDepthMax(preferredDepthsSO.depthActivePredationMax);
-                float hungerRelatedSpeed = speedsSO.activePredationSpeed + 1 - hungerPoints / 100;
+                float hungerRelatedSpeed = predationSpeed + 1 - hungerPoints / 100;
                 SetSpeed(hungerRelatedSpeed);
                 break;
             case PredatorMood.Reproduction:
@@ -174,7 +190,6 @@ public class Predator : Fish
     {
         if (adjacentWaterCellList.Count == 0)
         {
-            isTargetCellSelectionStarted = false;
             return;
         }
         float directionChangePossibility = UnityEngine.Random.Range(0, 100);
@@ -248,7 +263,18 @@ public class Predator : Fish
                         {
                             targetFish = adjacentWaterCellList[random].GetPreyList().First();
                         }
-                        // if there is a cell where a fish has been on compare the cell with the candidate cell
+                        // if another prey is detected and it is slower (meaning older) than the current target, then target the slower fish
+                        else if (targetFish != null && adjacentWaterCellList[random].GetPreyList().Count != 0)
+                        {
+                            foreach (Prey prey in adjacentWaterCellList[random].GetPreyList())
+                            {
+                                if (prey.GetDefaultSpeed() < targetFish.GetDefaultSpeed())
+                                {
+                                    targetFish = prey;
+                                }
+                            }
+                        }
+                        // if there is a cell where a fish has been on, compare the cell with the candidate cell
                         if (adjacentWaterCellList[random].GetPreyExistencePossibility() > candidateTargetCell.GetPreyExistencePossibility())
                         {
                             candidateTargetCell = adjacentWaterCellList[random];
@@ -372,7 +398,7 @@ public class Predator : Fish
         {
             Destroy(prey.gameObject);
             targetFish = null;
-            hungerPoints += 25;
+            hungerPoints += preyFeedPoint;
         }
     }
     private void OnTriggerStay2D(Collider2D collision)
@@ -382,7 +408,7 @@ public class Predator : Fish
         {
             Destroy(prey.gameObject);
             targetFish = null;
-            hungerPoints += 25;
+            hungerPoints += preyFeedPoint;
         }
     }
 
