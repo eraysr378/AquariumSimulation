@@ -134,17 +134,17 @@ public class Water : Cell
         {
             foreach (Water water in GetAdjacentWaterCellList())
             {
-                water.predatorExistencePossibility += 1;
+                water.predatorExistencePossibility += 0.5f;
                 foreach (Prey prey in water.GetPreyList())
                 {
-                    prey.ActivateEscapeMode();
+                    prey.ActivateEscapeMode(this);
                 }
             }
             foreach (Prey prey in GetPreyList())
             {
-                prey.ActivateEscapeMode();
+                prey.ActivateEscapeMode(this);
             }
-            predatorExistencePossibility += 1.75f;
+            predatorExistencePossibility += 1f;
         }
 
         predatorList.Add(predator);
@@ -339,4 +339,5 @@ public class Water : Cell
                 break;
         }
     }
+
 }

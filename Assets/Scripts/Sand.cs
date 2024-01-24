@@ -17,7 +17,7 @@ public class Sand : Cell
     private void Start()
     {
         algaeSpawnOffset = new Vector3(0, 0.5f, 0);
-        algaeEmergencePossibility = 50;
+        algaeEmergencePossibility = 30;
     }
     private void Update()
     {

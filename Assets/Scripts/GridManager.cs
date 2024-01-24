@@ -66,4 +66,14 @@ public class GridManager : MonoBehaviour
         return height;
     }
 
+    static public Cell GetCellOnLeft(Cell cell)
+    {
+        return GetCellAtPosition(new Vector2(cell.GetPosition().x - 1, cell.GetPosition().y));
+
+    }
+    static public Cell GetCellOnRight(Cell cell)
+    {
+        return GetCellAtPosition(new Vector2(cell.GetPosition().x + 1, cell.GetPosition().y));
+
+    }
 }

@@ -54,6 +54,7 @@ public class PreyEgg : MonoBehaviour
     {
         Prey prey = Instantiate(preyPrefab, currentCell.transform.position, Quaternion.identity);
         prey.SetHungePoints(80);
+        GameManager.Instance.IncreaseAlivePreyCount();
 
     }
     public void SetCurrentCell(Water cell)

@@ -23,6 +23,8 @@ public class PredatorParametersUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI hungerPointsToStopPredationText;
     [SerializeField] private TextMeshProUGUI hungerPointsToActivatePredationText;
     [SerializeField] private TextMeshProUGUI preyFeedPointText;
+
+    [SerializeField] private Button randomButton;
     private void Awake()
     {
         defaultSpeedSlider.onValueChanged.AddListener((float x) => { SetDefaultSpeed(); });
@@ -33,6 +35,8 @@ public class PredatorParametersUI : MonoBehaviour
         hungerPointsToStopPredationSlider.onValueChanged.AddListener((float x) => { SetHungerPointsToStopPredation(); });
         hungerPointsToActivatePredationSlider.onValueChanged.AddListener((float x) => { SetHungerPointsToActivatePredation(); });
         preyFeedPointSlider.onValueChanged.AddListener((float x) => { SetPreyFeedPoint(); });
+        randomButton.onClick.AddListener(() => { FillWithRandomValues(); });
+
     }
     private void Start()
     {
@@ -45,6 +49,22 @@ public class PredatorParametersUI : MonoBehaviour
         SetHungerPointsToStopPredation();
         SetPreyFeedPoint();
         Hide();
+    }
+    public void FillWithRandomValues()
+    {
+        SetSliderRandom(defaultSpeedSlider);
+        SetSliderRandom(predationSpeedSlider);
+        SetSliderRandom(sickSpeedSlider);
+        SetSliderRandom(hungerCoefficientSlider);
+        SetSliderRandom(neededTimeToHealSlider);
+        SetSliderRandom(hungerPointsToStopPredationSlider);
+        SetSliderRandom(hungerPointsToActivatePredationSlider);
+        SetSliderRandom(preyFeedPointSlider);
+    }
+    private void SetSliderRandom(Slider slider)
+    {
+        slider.value = Random.Range(slider.minValue, slider.maxValue);
+
     }
     private void SetDefaultSpeed()
     {

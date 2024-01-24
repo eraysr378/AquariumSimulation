@@ -197,7 +197,7 @@ public class Predator : Fish
         {
             moveDirection = moveDirection == Direction.Right ? Direction.Left : Direction.Right;
         }
-        if ((GetMood() == PredatorMood.ActivePredation || GetMood() == PredatorMood.PassivePredation) && targetFish == null && GetCurrentCell().GetPreyList().Count > 0)
+        if (GetHealthStatus() == HealthStatus.Healthy && (GetMood() == PredatorMood.ActivePredation || GetMood() == PredatorMood.PassivePredation) && targetFish == null && GetCurrentCell().GetPreyList().Count > 0)
         {
             targetFish = GetCurrentCell().GetPreyList().First();
         }
@@ -335,7 +335,7 @@ public class Predator : Fish
 
         if (targetFish != null)
         {
-            if (targetFish.IsHidden())
+            if (targetFish.IsHidden() || GetHealthStatus() == HealthStatus.Sick)
             {
                 targetFish = null;
                 return;

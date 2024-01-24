@@ -26,10 +26,10 @@ public class PredatorStatusUI : MonoBehaviour
         }
         else
         {
-            mood.text = "mood: " + predator.GetMood().ToString();
-            hungerPoints.text = "hunger: " + predator.GetHungerPoints().ToString("0.0");
-            healthStatus.text = "healthStatus: " + predator.GetHealthStatus().ToString();
-            speed.text = "speed: " + predator.GetSpeed().ToString("0.00");
+            mood.text = "Mood: " + predator.GetMood().ToString();
+            hungerPoints.text = "Hunger: " + predator.GetHungerPoints().ToString("0.0");
+            healthStatus.text = "HealthStatus: " + predator.GetHealthStatus().ToString();
+            speed.text = "Speed: " + predator.GetSpeed().ToString("0.00");
         }
 
     }

@@ -23,6 +23,8 @@ public class PreyParametersUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI eggLayingDurationText;
     [SerializeField] private TextMeshProUGUI leafFeedPointText;
     [SerializeField] private TextMeshProUGUI escapeTimeText;
+
+    [SerializeField] private Button randomButton;
     // Start is called before the first frame update
     private void Awake()
     {
@@ -34,6 +36,7 @@ public class PreyParametersUI : MonoBehaviour
         eggLayingDurationSlider.onValueChanged.AddListener((float x) => { SetEggLayingDuration(); });
         leafFeedPointSlider.onValueChanged.AddListener((float x) => { SetLeafFeedPoint(); });
         escapeTimeSlider.onValueChanged.AddListener((float x) => { SetEscapeTime(); });
+        randomButton.onClick.AddListener(() => { FillWithRandomValues(); });
     }
     void Start()
     {
@@ -53,6 +56,24 @@ public class PreyParametersUI : MonoBehaviour
     {
 
     }
+    public void FillWithRandomValues()
+    {
+
+        SetSliderRandom(defaultSpeedSlider);
+        SetSliderRandom(escapingSpeedSlider);
+        SetSliderRandom(neededTimeToLayEggSlider);
+        SetSliderRandom(neededTimeToLayEggSliderIncreaseAmountSlider);
+        SetSliderRandom(eggLayingDurationSlider);
+        SetSliderRandom(hungerLimitSlider);
+        SetSliderRandom(leafFeedPointSlider);
+        SetSliderRandom(escapeTimeSlider);
+    }
+    private void SetSliderRandom(Slider slider)
+    {
+        slider.value = Random.Range(slider.minValue, slider.maxValue);
+
+    }
+
     public void SetDefaultSpeed()
     {
         PreyParameters.DefaultSpeed = defaultSpeedSlider.value;

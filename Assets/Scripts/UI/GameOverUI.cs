@@ -32,7 +32,7 @@ public class GameOverUI : MonoBehaviour
     public void Show()
     {
         gameObject.SetActive(true);
-        gameOverText.text = "Simulation Lasted " + GameManager.Instance.GetPredatorDiedTime().ToString("0") + " Seconds Long.";
+        gameOverText.text = "Aquarium balance is lost after " + GameManager.Instance.GetSimulationEndTime().ToString("0") + " seconds.";
     }
     private void Hide()
     {

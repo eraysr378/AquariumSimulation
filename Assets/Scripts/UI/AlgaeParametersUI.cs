@@ -23,6 +23,8 @@ public class AlgaeParametersUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI poisonPossibilityText;
     [SerializeField] private TextMeshProUGUI poisonSpreadTimeText;
     [SerializeField] private TextMeshProUGUI leafSpawnTimeText;
+
+    [SerializeField] private Button randomButton;
     private void Awake()
     {
         seedToYoungTimeSlider.onValueChanged.AddListener((float x) => { SetSeedToYoungTime(); });
@@ -33,6 +35,8 @@ public class AlgaeParametersUI : MonoBehaviour
         poisonPossibilitySlider.onValueChanged.AddListener((float x) => { SetPoisonPossibility(); });
         poisonSpreadTimeSlider.onValueChanged.AddListener((float x) => { SetPoisonSpreadTime(); });
         leafSpawnTimeSlider.onValueChanged.AddListener((float x) => { SetLeafSpawnTime(); });
+        randomButton.onClick.AddListener(() => { FillWithRandomValues(); });
+
     }
     void Start()
     {
@@ -47,9 +51,20 @@ public class AlgaeParametersUI : MonoBehaviour
         Hide();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void FillWithRandomValues()
     {
+        SetSliderRandom(seedToYoungTimeSlider);
+        SetSliderRandom(youngToMatureTimeSlider);
+        SetSliderRandom(matureToRottenTimeSlider);
+        SetSliderRandom(rottenToPoisonousTimeSlider);
+        SetSliderRandom(poisonousToDeadTimeSlider);
+        SetSliderRandom(poisonPossibilitySlider);
+        SetSliderRandom(poisonSpreadTimeSlider);
+        SetSliderRandom(leafSpawnTimeSlider);
+    }
+    private void SetSliderRandom(Slider slider)
+    {
+        slider.value = Random.Range(slider.minValue, slider.maxValue);
 
     }
     private void SetSeedToYoungTime()

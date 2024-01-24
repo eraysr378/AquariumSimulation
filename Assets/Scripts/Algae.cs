@@ -18,7 +18,7 @@ public class Algae : MonoBehaviour
     [SerializeField] private GrowthLevel growthLevel;
     [SerializeField] private Sand currentSandCell;
     [SerializeField] private AlgaeGrowthSO algaeGrowthSO;
-    [SerializeField] private List<Prey> hiddenPreyList;
+    [SerializeField] private List<Prey> hiddenPreyList = new();
     private SpriteRenderer spriteRenderer;
 
 
@@ -58,6 +58,14 @@ public class Algae : MonoBehaviour
     void Update()
     {
         timer += Time.deltaTime;
+        if(hiddenPreyList.Count > 0 && !IsTherePredatorAround() )
+        {
+            foreach(Prey prey in hiddenPreyList)
+            {
+                prey.GetOutOfAlgae(this);
+            }
+            hiddenPreyList = new List<Prey>();
+        }
         switch (growthLevel)
         {
             case GrowthLevel.Seed:
@@ -188,5 +196,24 @@ public class Algae : MonoBehaviour
     public void AddHiddenPrey(Prey prey)
     {
         hiddenPreyList.Add(prey);
+    }
+    public bool IsTherePredatorAround()
+    {
+        Water currentWaterCell = (Water)GridManager.GetCellAtPosition(new Vector2(Mathf.Round(currentSandCell.GetPosition().x), Mathf.Round(currentSandCell.GetPosition().y + 1)));
+        List<Water> adjacentCells = currentWaterCell.GetAdjacentWaterCellList();
+        if (currentWaterCell != null && currentWaterCell.GetPredatorExistencePossibility() <= 0)
+        {
+            foreach (Water cell in adjacentCells)
+            {
+                if (cell.GetPredatorExistencePossibility() > 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
+
+
     }
 }

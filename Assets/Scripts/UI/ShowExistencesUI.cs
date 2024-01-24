@@ -55,6 +55,22 @@ public class ShowExistencesUI : MonoBehaviour
 
         ButtonClicked(preyExistenceButton);
     }
+    private void Start()
+    {
+        Hide();
+    }
+    private void Update()
+    {
+      
+    }
+    public void Show()
+    {
+        gameObject.SetActive(true);
+    }
+    public void Hide()
+    {
+        gameObject.SetActive(false);
+    }
     private void ResetButtonVisuals()
     {
         foreach (Button button in buttonList)

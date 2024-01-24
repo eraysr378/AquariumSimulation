@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
+using Unity.VisualScripting;
 
 public class GameManager : MonoBehaviour
 {
@@ -15,8 +17,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Transform scavengerPrefab;
     [SerializeField] private Button endSimulationButton;
     [SerializeField] private GameOverUI gameOverUI;
+    [SerializeField] private TextMeshProUGUI alivePreyCountText;
+    [SerializeField] private ShowExistencesUI showExistencesUI;
+    [SerializeField] float alivePreyCount;
+    //[SerializeField] private TextMeshProUGUI debugText;
 
-    private float predatorDiedTime;
+    private float simulationEndTime;
     private float gameTime;
 
     // Start is called before the first frame update
@@ -35,9 +41,10 @@ public class GameManager : MonoBehaviour
         endSimulationButton.gameObject.SetActive(false);
         for (int i = 0; i < 5; i++)
         {
-            Prey prey = Instantiate(preyPrefab, new Vector3(5+i*3, 5, 0), Quaternion.identity).GetComponent<Prey>();
+            Prey prey = Instantiate(preyPrefab, new Vector3(5 + i * 3, 5, 0), Quaternion.identity).GetComponent<Prey>();
             prey.SetHungePoints(Random.Range(40, 60));
             prey.SetMoveDirection((Direction)Random.Range(0, 2));
+            alivePreyCount++;
         }
         for (int i = 0; i < 1; i++)
         {
@@ -59,34 +66,52 @@ public class GameManager : MonoBehaviour
     private void Predator_OnPredatorDied(object sender, System.EventArgs e)
     {
         endSimulationButton.gameObject.SetActive(true);
-        predatorDiedTime = gameTime;
+        simulationEndTime = gameTime;
+        //debugText.text = "simulation count: " + GlobalVariables.simulationCount + "\nmax time: " + GlobalVariables.maxBalancedTime;
+        //gameOverUI.Show();
+        //Invoke("LoadAgain", 3f);
     }
+    private void LoadAgain()
+    {
+        GlobalVariables.simulationCount++;
+        if(simulationEndTime > GlobalVariables.maxBalancedTime)
+        {
+            GlobalVariables.maxBalancedTime = simulationEndTime;
+        }
+        SceneManager.LoadScene(1);
 
+    }
     // Update is called once per frame
     void Update()
     {
         gameTime += Time.deltaTime;
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (Time.timeScale == 1)
-            {
-                Time.timeScale = 0;
-            }
-            else
-            {
-                Time.timeScale = 1;
-            }
-        }
+
         if (Input.GetKeyDown(KeyCode.R))
         {
             SceneManager.LoadScene(0);
         }
-        //timer += Time.deltaTime;
-        //if (timer >= 0.1f)
-        //{
-        //    Instantiate(hunterPrefab, new Vector3(5, 2, 0), Quaternion.identity);
-        //    timer = 0;
-        //}
+        if (alivePreyCount > 15 && !endSimulationButton.gameObject.activeSelf)
+        {
+
+            endSimulationButton.gameObject.SetActive(true);
+            simulationEndTime = gameTime;
+            //debugText.text = "simulation count: " + GlobalVariables.simulationCount + "\nmax time: " + GlobalVariables.maxBalancedTime;
+            //gameOverUI.Show();
+            //Invoke("LoadAgain", 3f);
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (Time.timeScale == 1)
+            {
+                showExistencesUI.Show();
+                Time.timeScale = 0;
+            }
+            else
+            {
+                showExistencesUI.Hide();
+                Time.timeScale = 1;
+            }
+        }
     }
     public bool IsAlgaeSpawnable()
     {
@@ -104,8 +129,18 @@ public class GameManager : MonoBehaviour
     {
         currentAlgaeAmount--;
     }
-    public float GetPredatorDiedTime()
+    public float GetSimulationEndTime()
     {
-        return predatorDiedTime;
+        return simulationEndTime;
+    }
+    public void IncreaseAlivePreyCount()
+    {
+        alivePreyCount++;
+        alivePreyCountText.text = "Alive Prey: " + alivePreyCount;
+    }
+    public void DecreaseAlivePreyCount()
+    {
+        alivePreyCount--;
+        alivePreyCountText.text = "Alive Prey: " + alivePreyCount;
     }
 }
